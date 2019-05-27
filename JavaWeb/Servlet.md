@@ -1,3 +1,7 @@
+---
+typora-root-url: ./
+---
+
 # Servlet
 
 * 参考 
@@ -62,5 +66,9 @@
 ### Servlet 与 Servlet容器 的关系
 
 - Tomcat容器 包含着 Container容器 ， Container容器 包含 Engine ， Engine 包含 host ， host包含 Servlet容器， Servlet容器 包含 Context ， Context 包含 Wrapper
+
 - Tomacat-> Container容器-> Engine -> Host-> Servlet容器 -> Context-> Wrapper
+
+  ![TomcatModel](/Pic/TomcatModel.png)
+
 - 真正管理 Servlet 的容器 是 Context容器。
