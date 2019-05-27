@@ -1,0 +1,125 @@
+* 第2章 Java程序设计环境
+** 2.1 安装Java开发工具包
+*** 2.1.1 下载JDK
+**** 去Oracle 里面下吧
+***** 
+**** Windows 下载exe
+***** 
+**** Fedora  下载rpm
+#+BEGIN_SRC sh
+sudo rpm -ivh *.rpm
+#+END_SRC
+***** 
+*** 2.1.2 设置JDK
+**** Windows
+#+BEGIN_SRC 
+JAVA_HOME = jdk的地址
+PATH      = %JAVA_HOME%\bin
+
+然后去cmd里面跑个javac看看
+
+javac
+java -version
+#+END_SRC
+***** 
+**** Fedora
+***** rpm 后就没有什么需要注意的, 一般在 /usr/java/jdk-* 这里
+***** 
+*** 2.1.3 使用命令行工具
+**** ......有毒
+#+BEGIN_SRC sh
+javac filename.java
+java  classname
+#+END_SRC
+**** 文件名
+***** ex: Welcome.java 这是个文件名
+***** 
+**** 类名
+***** ex: Welcome      这是个类名
+**** 运作过程
+***** javac 程序是个编译器, 把源代码(.java)编译成class文件.
+***** java  程序启动JVM(JAVA Virtual Machine), 执行class文件中的『字节码』
+**** 
+** 2.3 使用集成开发环境
+**** 自己去看如何使用IDEA这个变态软件, 建议有钱买正版, 没钱用开源, 别瞎鸡巴破解, 不过话说JetBrains爸爸, 能卖便宜点吗? 苦涩
+**** 书上教的是Eclipse, 也可以 在P.19
+**** 
+** 2.4 运行图形化应用程序
+*** ImageViewer.java
+- 源代码
+#+BEGIN_SRC java
+package com.flan.ImageViewer;
+
+import java.awt.*;
+import java.io.*;
+import javax.swing.*;
+
+public class ImageViewer {
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            JFrame frame = new ImageViewerFrame();
+            frame.setTitle("ImageViewer");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
+        });
+    }
+}
+
+class ImageViewerFrame extends JFrame {
+    private JLabel label;
+    private JFileChooser chooser;
+    private static final int DEFAULT_WIDTH = 300;
+    private static final int DEFAULT_HEIGHT = 400;
+
+    public ImageViewerFrame() {
+        setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+
+        // use a label to display the images
+        label = new JLabel();
+        add(label);
+
+        chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("."));
+
+        JMenuBar menuBar = new JMenuBar();
+        setJMenuBar(menuBar);
+
+        JMenu menu = new JMenu("File");
+        menuBar.add(menu);
+
+        JMenuItem openItem = new JMenuItem("Open");
+        menu.add(openItem);
+        openItem.addActionListener(event -> {
+            // show file chooser dialog
+            int result = chooser.showOpenDialog(null);
+
+            // if file selected, set it as icon of the label
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String name = chooser.getSelectedFile().getPath();
+                label.setIcon(new ImageIcon(name));
+            }
+        });
+
+        JMenuItem exitItem = new JMenuItem("Exit");
+        menu.add(exitItem);
+        exitItem.addActionListener(event -> System.exit(0));
+
+    }
+}
+#+END_SRC
+
+**** 
+
+**** 这段代码可以打开个图片, 卡出屎来了.
+
+*** 
+
+** 2.5 构建并运行 applet
+
+**** 算了吧, 我是不会运行的
+
+**** 苦笑
+
+**** 
+
+*** 

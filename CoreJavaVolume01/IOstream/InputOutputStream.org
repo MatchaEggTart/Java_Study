@@ -1,0 +1,763 @@
+* I/O 流
+  - 字节流搞字符不方便阿， 特别是中文
+
+** OutputStream
+*** 概述
+    - 这个是个 『抽象类』， 所有字节输出流的 父类
+  
+    - 常用子类
+      - FileOutputStream
+      - BufferedOutputStream
+      - ObjectOutputStream
+      - PrintStream
+  - 自带方法
+      - void close()
+      - void write(byte[] b)
+      - void write(byte[] b, int off, int len)
+      - void write(int b)	// What's this? 转换为 字符? int 97 -> byte a?
+    - 作用:
+      - 以字节为单位输出数据到文件中
+
+
+*** FileOutputStream
+    - 继承了 OutputStream， 以字节为单位输出数据
+
+    - 构造方法	(自带无中生有属性)
+
+      - 根据字符串路经创建字节输出流对象
+	#+BEGIN_SRC java
+	FileOutputStream(String pathname);
+	ex:
+	FileOutputStream fos = new FileOutputStream("C:\\b.txt");
+	#+END_SRC
+
+      - 根据文件对象创建字节输出对象
+	#+BEGIN_SRC java
+	FileOutputStream(File file);
+	ex:
+	FileOutputStream fos = new FileOutputStream(new File("C:\\c.txt"));
+	#+END_SRC
+
+      - 无中生有:
+	- 如果文件不存在， 则会自动创建文件
+
+      - 清空
+	- 如果文件已存在， 则会先清空文件内容。
+      - 追加
+	- 因为有清空属性， 如果只想在文件末尾填充数据， 在构造器第二个参数写入true即可
+	  #+BEGIN_SRC java
+	  FileOutputStream(File file, boolean append)
+	  FileOutputStream(String pathname, boolean append)
+	
+	  ex:
+	  FileOutputStream fos = new FileOutputStream(new File("C:\\c.txt"), true);
+	  #+END_SRC
+
+    - 方法
+
+      - void write(byte[] b)
+	- 参数必须为字节数组
+
+      - void write(byte[] b, int off, int len)
+	- 参数必须为字节数组
+
+      - void write(int b)	// What's this? 转换为 字符? int 97 -> byte a?
+
+      - void close
+	- 一旦关闭流， 不能再读写数据
+
+*** BufferedOutputStream
+    - 继承了 OutputStream， 以字节(数组)为单位输出数据， 与 FileOutputStream 的区别在于构造器， 其他基本一致
+
+    - 构造方法 (暂时只有一种)
+      - 以 OutputStream 的对象作为参数， 构造一个 字节输出缓冲流 的对象
+	#+BEGIN_SRC java
+	BufferedOutputStream(OutputStream os)
+
+	ex:
+	FileOutputStream fos = new FileOutputStream("C:\\b.txt", true);
+	BufferedOutputStream bos = new BufferedOutputStream(fos);
+	#+END_SRC
+	- (OutputStream 还特么是个抽象类， 明显是要 FileOutputStream 作参数)
+    - 方法
+      - void write(byte[] b)
+	- 参数必须为字节数组
+
+      - void write(byte[] b, int off, int len)
+	- 参数必须为字节数组
+
+      - void write(int b)	// What's this? 转换为 字符? int 97 -> byte a?
+
+      - void close
+	- 一旦关闭流， 不能再读写数据
+
+*** ObjectOutputStream
+    - 继承了 OutputStream， 以字节(数组)为单位将对象转化为流输出数据， 序列化
+
+    - 构造方法 (暂时只有一种)
+      - 以 OutputStream 的对象为参数， 构造一个 字节输出流 的对象
+
+      - 目前只能传递的字节输出流: FileOutputStream BufferedOutputStream
+	#+BEGIN_SRC java
+	void ObjectOutputStream(OutputStream out)
+
+	ex:
+	BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("C:\\b.txt", true));
+	ObjectOutputStream oos = new ObjectOutputStream(bos);
+	#+END_SRC
+    - 方法
+      - void writerObject(Object obj)
+	- 将对象保存到流关联的目标文件中
+
+*** PrintStream
+    - 根据目标文件创建的字节打印流
+
+    - 构造方法
+      - 以文件为参数，构造一个 打印流
+	#+BEGIN_SRC java
+	PrintStream(String filename)
+
+	ex:
+	PrintStream ps = new PrintStream("d.txt");
+	#+END_SRC
+
+    - 方法
+      - print
+
+      - println
+
+    - 把控制台(终端)的打印流重定向改变到文件。
+      - PrintStream ps = System.out;
+	#+BEGIN_SRC java
+	PrintStream ps = new PrintStream("ps.txt");
+	PrintStream consolePs = System.out;
+	System.setOut(ps);		// setOut 方法
+	System.out.println(97);		// 不再在控制台输出， 而是输出到 ps 指向的 ps.txt文件中
+	System.out.println(1110);	// 不再在控制台输出， 而是输出到 ps 指向的 ps.txt文件中
+
+	System.setOut(consolePs);	// 
+	System.out.println("abc");	// 把"abc" 输出到控制台
+	#+END_SRC
+
+
+** InputStream
+*** 概述
+    - 这个是个『抽象类』， 所有字节输入流的 父类
+  
+    - 常用子类
+      - FileInputStream
+      - BufferedInputStream
+      - ObjectOutputStream
+
+  - 自带方法
+      - void close()
+      - int read()				// 返回字节数， 比如读取到'a'这个字节， 返回97
+       						 // 特殊性: 会自己读下一个字节的流，一直用， 一直读
+      - int read(byte[] b)			// 返回实际读取到的字节个数
+      - int read(byte[] b, int off, int len)	// 返回实际读取到的字节个数
+
+    - 作用:
+      - 以字节为单位从文件中读取数据
+
+
+*** FileInputStream
+    - 继承了 InputStream， 以字节为单位读取数据
+    - 构造方法	(不带无中生有属性)
+
+      - 根据字符串路经创建字节读取流对象
+	#+BEGIN_SRC java
+	FileInputStream(String pathname)
+	#+END_SRC
+
+      - 根据文件对象创建字节读取流对象
+	#+BEGIN_SRC java
+	FileInputStream(File file)
+	#+END_SRC
+
+      - 如果目标文件不存在
+	- 会抛出异常: FileNotFoundException
+
+    - 方法
+
+      - int read()
+	- 这个是读取当前『读取流对象』的一个字节， 然后返回他的字节数(ASCII? UTF-8?)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(byte[] b)
+	- 将读取到的字节数存储到指定的字节数组中(b)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	  - 所以这个方法要创建个byte[]来接
+
+	- 返回实际读取到的字节个数
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(byte[] b, int off, int len)
+	- 从数组索引off开始到数组索引(off + len)之间，读取到的字节数存储到指定的字节数组中(b)
+
+	- 返回实际读取到的字节个数
+
+	- 如果读到文件末尾， 返回 -1
+
+      - 主要是 int read()有点特殊， 我觉得可以一直 System.out.print((char)fis.read());
+
+*** BufferedInputStream
+    - 继承了 InputStream， 以字节(数组)为单位读取数据， 与 FileInputStream 的区别在于构造器， 其他基本一致
+
+    - 构造方法 (暂时只有一种)
+      - 以 InputStream 的对象作为参数， 构造一个 字节(数组)读取缓冲流 的对象
+	#+BEGIN_SRC java
+	BuffereInputStream(InputStream is)
+	
+	ex:
+	FileInputStream fis = new FileInputStream("C:\\d.txt");
+	BufferedInputStream bis = new BufferedInputStream(fis);
+	#+END_SRC
+	- (也是要先搞个FileInputStream的对象才行)
+
+    - 方法 
+      - int read()
+	- 这个是读取当前『读取流对象』的一个字节数组， 然后返回他的字节数(ASCII? UTF-8?)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(byte[] b)
+	- 将读取到的字节数存储到指定的字节数组中(b)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	  - 所以这个方法要创建个byte[]来接
+
+	- 返回实际读取到的字节个数
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(byte[] b, int off, int len)
+	- 从数组索引off开始到数组索引(off + len)之间，读取到的字节数存储到指定的字节数组中(b)
+
+	- 返回实际读取到的字节个数
+
+	- 如果读到文件末尾， 返回 -1
+
+
+*** ObjectInputStream
+
+    - 继承了 InputStream, 以字节(数组)为单位读取流并且转换为对象。 反序列化
+
+    - 构造方法 (暂时只有一种)
+      - 以 InputStream 的对象作为参数， 构造一个 对象输入流
+
+      - 目前只能传递的字节输入流: FileInputStream BuffereInputStream
+	#+BEGIN_SRC java
+	ObjectInputStream(InputStream in)
+
+	ex:
+	ObjectInputStream ois = new ObjectInputStream(new FileInputStream("C:\\b.txt"));
+	#+END_SRC
+
+
+    - 方法
+      - Object readObject();
+	- 从流关联的目标文件中读取一个自定义对象
+
+
+** Writer
+*** 概述
+    - 这个逼是个抽象类， 是所有字符输出流的父类
+
+    - 常用子类
+      - FileWriter
+      - BufferedWriter
+      - ObjectWriter
+      - PrintWriter
+
+    - 方法
+      - void close()
+      - void write()
+      - void write(char[] cbuf)
+      - void write(char[] cbuf, int off, int len)
+      - void write(int c)
+      - void write(String str)
+      - void write(String str, int off, int len)
+      - 可以理解为write只吃 字符数组 跟 字符串
+
+    - 作用
+      - 以字符为单位输出数据到文件中
+
+
+*** FileWriter
+    - 继承了 Writer， 以字符为单位输出数据
+
+    - 构造方法	(自带无中生有属性)
+      - 根据字符串路经创建字符输出流对象
+	#+BEGIN_SRC java
+	FileWriter(String pathname)
+	#+END_SRC
+
+      - 根据文件对象创建字符输出对象
+	#+BEGIN_SRC java
+	FileWriter(File file)
+	#+END_SRC
+
+      - 无中生有:
+	- 如果文件不存在， 则会自动创建文件
+
+      - 清空
+	- 如果文件存在， 则会先清空文件内容
+
+      - 追加
+	- 因为有清空属性， 如果只想在文件末尾填充数据， 在构造器第二个参数写入true即可
+	  #+BEGIN_SRC java
+	  FileWriter(String pathname, boolean append)
+	  FileWriter(File file, boolean append)
+
+	  ex:
+	  FileWriter fw = new FileWriter(new File("C:\\d.txt"), true);
+	  #+END_SRC
+
+    - 方法 
+      - void close()
+      - void write()
+      - void write(char[] cbuf)
+      - void write(char[] cbuf, int off, int len)
+      - void write(int c)
+      - void write(String str)
+      - void write(String str, int off, int len)
+
+*** BufferedWriter
+    - 继承了 Writer， 以字符为单位输出数据， 除了构造方法外， 与 FileWriter 的区别在于构造器， 其他基本一致
+
+    - 构造方法 (暂时只有一种)
+      - 以 Writer 的对象作为参数， 构造一个 字符(数组)读取缓冲流 的对象
+	#+BEGIN_SRC java
+	BufferedWriter(Writer writer)
+
+	ex:
+	FileWriter fw = new FileWriter("C:\\d.txt");
+	BuffereWriter bw = new BufferedWriter(fw);
+	#+END_SRC
+	- (还是先搞个FileWriter的对象先)
+
+    - 方法 
+      - void close()
+      - void write()
+      - void write(char[] cbuf)
+      - void write(char[] cbuf, int off, int len)
+      - void write(int c)
+      - void write(String str)
+      - void write(String str, int off, int len)
+
+      - 意味着也只能传输字符， 是字符
+
+
+*** OutputStreamWriter
+    - 继承 Writer ， 字符转换输出流， 需要指定码表输出数据时使用
+    - 构造方法 其实不止两种
+      - OutputStreamWriter(OutputStream out)
+
+      - OutputStreamWriter(OutputStream out, String charName)
+	- 这个常用， 因为指明是 GBK 还是 ASCII 还是 UTF-8 码表来输出
+    - 方法 
+      - void close()
+      - void write()
+      - void write(char[] cbuf)
+      - void write(char[] cbuf, int off, int len)
+      - void write(int c)
+      - void write(String str)
+      - void write(String str, int off, int len)
+
+*** PrintWriter
+    - 根据目标文件创建的字符打印流
+
+    - 构造方法
+      - 以文件为参数，构造一个 打印流
+	#+BEGIN_SRC java
+	PrintWriter(String filename)
+
+	ex:
+	PrintWriter ps = new PrintWriter("d.txt");
+	#+END_SRC
+
+    - 方法
+      - print
+
+      - println
+
+
+** Reader
+*** 概述
+    - 这个逼也是个抽象类， 是所有字符输入流的父类
+
+    - 常用子类
+      - FileReader
+      - BufferedReader
+      - ObjectReader
+
+    - 方法
+      - int close()
+
+      - int read()
+
+      - int read(char[] cbuf)
+
+      - int read(char[] cbuf, int off, int len)
+
+      - 这个好像连字符串都不吃， 不过大把方法转换啦
+
+
+*** FileReader
+    - 继承了Reader， 以字符为单位从读取数据
+
+    - 构造方法	(不带无中生有属性)
+      - 根据字符串路经创建字符读取流对象
+	#+BEGIN_SRC java
+	FileReader(String pathname)
+	#+END_SRC
+
+      - 根据文件对象创建字符读取流对象
+	#+BEGIN_SRC java
+	FileReader(File file)
+	#+END_SRC
+
+      - 如果目标文件不存在
+	- 一样会抛异常
+
+    - 方法
+      - int read()
+	- 这个是读取当前『读取流对象』的一个字符， 然后返回他的字符数(ASCII? UTF-8?)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(char[] cbuf)
+	- 将读取到的字符数存储到指定的字符数组中(cbur)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	  - 所以这个方法要创建个char[]来接
+
+	- 返回实际读取到的字符个数
+
+	- 如果读到文件末尾， 返回 -1	
+
+      - int read(char[] cbuf, int off, int len)
+	- 从数组索引off开始到数组索引(off + len)之间，读取到的字符数存储到指定的字符数组中(cbuf)
+
+	- 返回实际读取到的字符个数
+
+	- 如果读到文件末尾， 返回 -1
+
+*** BufferedReader
+    - 继承了 Reader， 以字符为单位读取数据， 除了构造方法外， 与 FileReader 的区别在于构造器， 其他基本一致
+
+    - 构造方法 (暂时只有一种)
+      - 以 Reader 的对象作为参数， 构造一个 字符(数组) 读取流对象
+	#+BEGIN_SRC java
+	BufferedReader(Reader reader)
+	
+	ex:
+	FileReader fr = new FileReader("C:\\d.txt");
+	BufferedReader br = new BufferedReader(fr);
+	#+END_SRC
+	- 一样: 先造个FileReader的对象做对象先吧
+
+    - 方法
+      - int read()
+	- 这个是读取当前『读取流对象』的一个字符， 然后返回他的字符数(ASCII? UTF-8?)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(char[] cbuf)
+	- 将读取到的字符数存储到指定的字符数组中(cbur)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	  - 所以这个方法要创建个char[]来接
+
+	- 返回实际读取到的字符个数
+
+	- 如果读到文件末尾， 返回 -1	
+
+      - int read(char[] cbuf, int off, int len)
+	- 从数组索引off开始到数组索引(off + len)之间，读取到的字符数存储到指定的字符数组中(cbuf)
+
+	- 返回实际读取到的字符个数
+
+	- 如果读到文件末尾， 返回 -1
+
+    - 特有方法
+      - String readLine()
+	- 读取一行数据， 读到文件末尾返回null
+
+	- ex:
+	  #+BEGIN_SRC java
+	  String line = null;
+	  while ((line = br.readline()) != null) {
+	      System.out.println(line);
+	  }
+	  #+END_SRC
+
+*** InputStreamReader
+    - 继承 Reader，字符转换输入流， 需要制定码表输入数据时使用
+    - 构造方法 
+      - InputStreamReader(InputStream in)
+      - InputStreamReader(InputStream in, String charName)
+	- 这个常用， 因为指明是 哪个码表 来输入
+    - 方法
+      - int read()
+	- 这个是读取当前『读取流对象』的一个字符， 然后返回他的字符数(ASCII? UTF-8?)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	- 如果读到文件末尾， 返回 -1
+
+      - int read(char[] cbuf)
+	- 将读取到的字符数存储到指定的字符数组中(cbur)
+	  - 有点像Interator的next会返回当前的值， 但指标会往后移动
+
+	  - 所以这个方法要创建个char[]来接
+
+	- 返回实际读取到的字符个数
+
+	- 如果读到文件末尾， 返回 -1	
+
+      - int read(char[] cbuf, int off, int len)
+	- 从数组索引off开始到数组索引(off + len)之间，读取到的字符数存储到指定的字符数组中(cbuf)
+
+	- 返回实际读取到的字符个数
+
+	- 如果读到文件末尾， 返回 -1
+
+
+** close / flush
+*** 概述
+
+*** flush
+    - 刷新缓冲区， 将缓冲区数组的内容输出到目标文件中， 刷新之后流还可以继续使用
+*** close
+    - 关闭流释放资源， 在关闭之前会先调用flush()刷新缓冲区， 之后流不能再使用
+
+
+** 缓冲流
+*** 概述
+**** 有4个缓冲流 分别是
+     - BufferedInputStream
+     - BufferedOutputStream
+     - BufferedReader
+     - BufferedWriter
+
+**** 缓冲流原理
+     - 内部用『数组』临时存储多个数据， 当缓冲区数组满了 or 调用了 close / flush 方法，才会一次性调用底层资源将缓冲区数组的数据输出目标文件中。
+     - 底层资源的调用速度极度缓慢， 如果每次都是一字节调用一次， 效率极低， 如果一次8192个字节调用一次， 提高读写速度啊
+
+**** 注意事项
+     - 当缓冲区数组每填满之前， 必须要 close / flush ， 不然数据会丢失。
+
+**** 缓冲流的 close 方法
+     - BufferedReader 的例子
+     - 基本自己点进去看会看到， 有一个私有成员变量 Reader in
+       - 源代码
+	 #+BEGIN_SRC java
+	 public class BufferedReader extends Reader {
+             private Reader in;						// 先弄个私有的 Reader 对象
+	     ...
+	     private static int defaultCharBufferSize = 8192;		// 缓冲字符数组的个数: 8192
+	     ...
+	 }
+
+	 public BufferedReader(Reader in, int sz) {			// 两个参数的构造器， 实际上单参数的构造器也是用这个构造器来跑
+             super(in);							// Reader 的 protected 构造器， 判定 参数是不是 null
+             if (sz <= 0)						// 缓冲区数组大小
+		 throw new IllegalArgumentException("Buffer size <= 0");
+             this.in = in;						// 这是重点！ BufferedReader的 in 引用了 Reader的 in， 到时候in.close 也等于 Reader.in的close
+             cb = new char[sz];						// 记住对象都他妈是指针， 指针！
+             nextChar = nChars = 0;
+	 }
+
+	 public BufferedReader(Reader in) {				
+             this(in, defaultCharBufferSize);				// 单参构造器， 直接把8192作第二个参数， 调用同类构造器引用
+	 }
+
+
+	 public void close() throws IOException {
+             synchronized (lock) {
+		 if (in == null)
+                     return;
+		 try {
+                     in.close();					// 关闭缓冲区的流
+		 } finally {
+                     in = null;
+                     cb = null;
+		 }
+             }
+	 }
+	 #+END_SRC
+
+       - 例子
+	 #+BEGIN_SRC java
+	 public class Demo05_01 {
+	     public static void main(String[] args) throws Exception {
+                 FileReader fr = new FileReader("a.txt");
+                 BufferedReader br = new BufferedReader(fr);
+
+                 FileWriter fw = new FileWriter("b.txt");
+                 BufferedWriter bw = new BufferedWriter(fw);
+
+                 ArrayList<String> list = new ArrayList<>();
+                 String line = new String();
+
+                 while ((line = br.readLine()) != null) {
+                     list.add(line);
+                 }
+
+                 Collections.sort(list);
+
+                 for (String str: list) {
+                     bw.write(str);
+                     bw.newLine();
+                     // System.out.println(str);
+                 }
+                 bw.write("干你阿");
+
+                 // fr.close();
+                 // bw.close();      会导致数据无法录入
+                 br.close();					// 这里 BufferedReader已经关闭了
+                 bw.close();
+
+                 int len = -1;
+                 while ((len = fr.read()) != -1) {
+                     System.out.println((char)len);		// 这里尝试读取 BufferedReader 的参数 FileReader
+                 }
+    	     }
+	 }
+	 #+END_SRC
+
+       - 结果
+	 #+BEGIN_SRC sh
+	 Exception in thread "main" java.io.IOException: Stream closed
+	 #+END_SRC
+     - 所以如果关闭缓冲流其实就关闭了他引用的I/O流
+
+
+** 什么时候使用字节流、什么时候使用字符流
+   - 处理字符的时候应该用字符流， 没有字符的时候用字节流
+*** 字节流
+    - 字节流可以处理任何文件， 但是处理字符很容易出问题。因为是每一字节每一字节处理， 字符有些是两字节、三字节的情况。
+    - 能处理任何字节流， 但是效率底
+    - 字节流不会查询码表
+
+*** 字符流
+    - 字符流只能可以处理字符， 但是
+    - 效率高(一次处理多个)， 只能处理字符
+    - 字符流会查询码表
+*** 区别
+    #+BEGIN_SRC
+    1、字节流在操作的时候本身是不会用到缓冲区（内存）的，是与文件本身直接操作的，而字符流在操作的时候是使用到缓冲区的
+
+    2、字节流在操作文件时，即使不关闭资源（close方法），文件也能输出，但是如果字符流不使用close方法的话，则不会输出任何内容，说明字符流用的是缓冲区，并且可以使用flush方法强制进行刷新缓冲区，这时才能在不close的情况下输出内容
+
+    3、Reader类的read()方法返回类型为int ：作为整数读取的字符（占两个字节共16位），范围在 0 到 65535 之间 (0x00-0xffff)，如果已到达流的末尾，则返回 -1。inputStream的read()虽然也返回int，但由于此类是面向字节流的，一个字节占8个位，所以返回 0 到 255 范围内的 int 字节值。如果因为已经到达流末尾而没有可用的字节，则返回值 -1。因此对于不能用0-255来表示的值就得用字符流来读取！比如说汉字.
+
+    4、字节流与字符流主要的区别是他们的的处理方式
+
+    字节流：处理字节和字节数组或二进制对象；
+
+    字符流：处理字符、字符数组或字符串。
+    #+END_SRC
+
+** Properties
+*** 概述
+    - 继承 Hashtable
+      - Hashtable 是个过时的类， 线程安全， 效率底 ， 被 HashMap 取代了
+    - 是个双列集合
+    - 可以与流结合使用
+
+
+*** 方法
+**** 输入流
+     - void load(InputStream in)
+     - void load(Reader reader)
+***** 
+      - 从流关联的目标文件中读取数据到集合中
+
+
+**** 输出流
+     - void store(OutputStream out, String comments)
+     - void store(Writer writer, String comments)
+***** 
+      - 将集合的元素保存到流关联的目标中， comments 一般给 null 
+
+
+**** 常用方法
+     - Object setProperty(String key, String value)
+       - 存储键值对数据
+       - 键存在， 则使用新值替换旧值， 返回旧值
+       - 键不存在， 则直接添加， 返回 null
+
+     - String getProperty(String key)
+       - 根据参数 键获得值， 不存在返回 null
+
+     - Set<String> stringPropertyNames()
+       - 获得键集合， 效果和keySet方法一样
+
+
+** 对象序列化
+
+**** 概述
+     - 知道了I/O流，就要知道如何保存I/O流
+
+     - 我们知道如何用 Properties 来存储 数据， 但是如果是个， 多数据类型的数据， 就可以用对象来存， Properties怎么一起存 int char String 
+
+**** 对象序列化
+     - 将对象转换为流保存到文件中的过程
+
+**** 对象反序列化
+     - 将文件中的流读取出来并转换为对象的过程
+
+**** Serializable
+     - NotSerializableException
+***** Why
+      - 为什么要使用接口 Serializable
+	- 因为如果没有这个接口， 将对象序列化的时候会报错
+***** Serializable 接口
+      - 这是个标记接口， 里面什么都没有……
+
+**** serialVersionUID
+     - 原文出自: https://www.cnblogs.com/duanxz/p/3511695.html
+     - 这是一个类， 用来把JVM传来的字节流中的serialVersionUID与本地的serialVersionUID进行比较， 如果是相同， 可以进行反序列化，否则抛出 InvalidCastException 。
+     - 具体序列化的过程是这样的：
+       #+BEGIN_SRC 
+       序列化操作时会把系统当前类的serialVersionUID写入到序列化文件中，
+       当反序列化时系统会自动检测文件中的serialVersionUID，判断它是否与当前类中的serialVersionUID一致。
+       如果一致说明序列化文件的版本与当前类的版本是一样的，可以反序列化成功，否则就失败；
+       #+END_SRC
+     - 例子
+       - 如果没有创造这个类的对象在类里， 你在类里增加了一个实例变量(这个实例变量什么都没有， 不封装)， 再去反序列号会报错
+	 #+BEGIN_SRC java
+	 Exception in thread "main" java.io.InvalidClassException: com.flan.Serizilizable_transient.Student; local class incompatible: stream classdesc serialVersionUID = 3895949024416582578, local class serialVersionUID = -4212625080376955839
+	 #+END_SRC
+     - 理解
+       - 当你写好一个类， 把类的对象序列化到文件中保存好了， 下次你在类里增删点东西， 比如加个无参无返回的eat()方法， 你再去读取文件中的对象， 那会报错！
+       - 你不写 serialVersionUID, 类改变后， 就认不得了。	
+**** transient
+     - 有的对象的实例变量不想跟随对象一起被序列化， 加上 transient 这个修饰符。
+
+     - 作用:
+       - 可以节省空间
+
+       - 或者那个对象用放在其他数据库， 比如账号名跟账号信息可以被序列号， 但是密码就应该存在其他地方。
+
+
+*** ObjectOutputStream
+*** ObjectInputStream
+
+** 打印流
+*** 概述
+**** 特点
+     - 只有输入， 没有输出(只有 InputStream Reader)
+     - 能沟原样输出各种数据类型的值
+
+** 小结
+*** 能用 Buffered 优先用， 只有字符 用 Writer 跟 Reader。 其他数据用字符
+*** 区别

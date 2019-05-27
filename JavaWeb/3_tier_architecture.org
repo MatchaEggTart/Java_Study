@@ -1,0 +1,455 @@
+- 参考 引用:
+  - https://zhuanlan.zhihu.com/p/40249834
+  - https://www.zhihu.com/question/51225362/answer/335351680
+  - https://zhuanlan.zhihu.com/p/25774000
+  - https://zhuanlan.zhihu.com/p/60986690
+
+  - 非常感谢！
+
+
+* HTTP
+
+** 概述
+
+*** 概念
+
+**** HyperText Transfer Protocol (超文本传输协议)
+
+*** 作用
+
+**** 用来 「服务器」 和 「浏览器」 之间的 进行的网页内容 传输
+
+*** 组成
+
+**** 请求 响应
+
+
+
+** 特点
+
+*** 简单快速
+
+**** 用 GET POST 请求传送 。 HTTP协议简单， 使服务器程序规模小， 因而通信速度很快。
+
+*** 灵活
+
+**** HTTP 允许传输任意类型的 数据类型
+
+*** 无状态
+
+**** HTTP协议是「无状态协议」。 无状态 指 对于 事务处理(数据库里面提过) 没有记忆力。如果后续处理需要前面的信息， 它必须重传。
+
+**** 优点:
+
+     - 不需要前面信息时， 速度快(因为不需要携带前面信息一起传输处理)
+
+**** 缺点
+
+     - 每次连接传送数据量增大
+
+
+
+* HttpServletRequest (请求对象)
+
+** 概述
+
+*** 什么是Http请求?
+    - 用于 封装 浏览器发送给服务器的 所有数据， 被称为 请求对象 ServletRequest 。 在 JavaEE 中 有个子接口 : HttpServletRequest
+
+
+*** 请求 组成
+
+**** 请求行
+
+***** 组成
+      - 请求方式
+	- GET or POST
+
+      - 请求URL
+	- 路径名
+
+      - 协议和版本
+
+***** GET POST 区别
+      - get 数据在请求行中发送， 可以在地址栏显示参数 ，	post 数据在请求体中 发送， 地址栏不显示参数
+      - get 一般只能传输 2K 的数据(不同浏览器不同)		post 没有限制
+      - get 安全性低					post 安全性高
+      - get 会使用缓存 (从服务器上获取数据)			post 发送数据不使用缓存
+
+**** 请求头
+
+***** 组成 (常见)
+      - Referer
+	- 从哪个页面跳转过来
+
+      - If-Modified-Since
+	- 当前网页在 本地缓存 的时间(美国时间)
+
+      - User-Agent
+	- 客户端系统 浏览器 型号
+
+      - Connection
+	- 当前TCP连接状态	keep-alive/close
+
+      - Host
+	- 服务器的主机名 端口号
+
+**** 请求体
+
+***** POST 才有请求体， 拿来传输 参数的。 安全一点点
+
+
+*** name : value 成对
+
+**** 
+    - 请求对象里 html 的 name="name" name 就是 HttpServletRequest 请求参数 的名字
+    - 请求对象里 html 的 value="value" value 就是 HttpServletRequest 请求参数 的值
+
+
+** 方法
+
+*** 获取 请求行 方法
+
+**** String getMethod();
+     - 返回请求方式 (GET 或者 POST)
+
+
+**** String getRequestURI();
+     - 返回统一资源标识符 (比如 http://www.hupu.com/nba/spurs 就会返回 /nba/spurs)
+
+
+**** String getRequestURL();
+     - 返回统一资源定位符 (比如 http://www.hupu.com/nba/spurs 就会返回 http://www.hupu.com/nba/spurs)
+
+
+**** String getProtocol();
+     - 返回协议和版本 (HTTP/1.1)
+
+
+**** String getContextPath();
+     - 当前项目访问路径 (比如 http://www.hupu.com/nba/spurs 就会返回 /spurs)
+
+
+**** String getRemoteAddr();
+     - 谁访问就返回谁的 ID
+
+
+
+*** 获取 请求头 方法
+
+**** Enumeration<String> getHeaderNames();
+     - 获取所有 请求头 名称
+
+
+**** String getHeader(String var1);
+     - 跟据传入的参数的字符串(头名、键值) 返回 对应的数值(数值)
+
+
+*** 获取 请求参数 方法
+
+**** Map<String, String[]> getParameterMap();
+     - 把所有请求的参数 集合在一个 Map集合中 返回这个集合
+
+
+**** String getParameter(String var1);
+     - 从参数(这个是键:也是请求参数的名字) 获得参数对应的值
+
+
+**** Enumeration<String> getParameterNames();
+     - 获得所有请求参数的 键/名字
+
+
+**** String[] getParameterValues(String var1);
+     - 从参数(这个是键:也是请求参数的名字) 获得参数对应的值 (有的值不止一个， 以数组存放)
+     - 比如 复选框 下拉列表多选 ...
+
+
+*** 编码格式
+
+**** Tomcat 8.0 之后， GET 请求方式不需要考虑转码， POST 一定要！！！
+
+
+**** void setCharacterEncodiong(String var1) throws UnsupportedEncodingException;
+     - 根据参数的编码名 把 请求对象所有数值变成这个编码
+
+
+*** 转发
+
+**** RequestDispatcher getRequestDispatcher(String var1);
+     - request.getRequestDispatcher("要跳转的⻚页面面地址").forward(request, response);
+
+
+* BeanUtils
+
+*** BeanUtils 是啥
+
+**** Apache 组织开发的 对 JavaBean 进行操作的 产品(赋值、取值)
+
+
+*** JavaBean 类的要求
+
+**** 满足以下3个条件的类 就是 JavaBean 类
+     - 类必须使用 public 修饰
+     - 提供无参构造器
+     - getter setter 方法要有
+
+
+*** 使用方式
+
+**** 下载地址
+     - http://www.commons.apache.org/
+
+**** 包
+     - commons-beanutils-*.jar
+       - 工具核心包
+     - commons-logging-*.jar
+       - 日志记录包
+     - commons-collections-*.jar
+       - 增强的集合包
+
+**** 把包放在 web/WEB-INF/lib 里面
+
+
+*** 方法
+
+**** public static void populate(Object bean, Map<String, ? extends Object> properties)
+     - 把 map 数据 封装到 Object对象中 (就是把数据再次变为对象)
+
+
+
+* 作用域
+
+** Servlet 有三个 作用域
+
+*** 什么是作用域
+
+**** 服务器端 一块 内存区域， 底层用 MAP 格式存放数据
+
+
+*** 功能
+
+**** 在 Servlet 之间 共享数据
+
+
+
+** 请求域
+
+*** 概述
+
+**** 请求域 作用范围
+     - 只在 「同一次」请求中 使用
+     - 一旦 doGet 或者 doPost 代码执行完， 请求就结束， 请求域的数据就会消失
+
+*** 方法
+
+**** Object getAttribute("键")
+     - 从作用域中根据键获得值
+
+**** void setAttribute("键", Object数据)
+     - 将键值对 存放到 作用域里 (无则新增， 有则取代)
+
+**** void removeAttribute("键")
+     - 根据键 删除作用域 的 键值对
+
+*** 理解
+
+**** 怎么传输
+     - 有一个 Servlet程序a(java文件) 重写了 doGet 方法， 里面用了 [1]req.set("A", "1"); [2]req.set("B", "2");
+     - 当程序执行完， doGet 方法 会把 这两个键值对 存放到服务器内存中
+     - 「必须」要有转发器，还不能是重定向， 必须是 转发 ， getRequestDispatcher("/转发目录").forward(req, resp)
+     - 就会把服务器内存的两个键值对 转给 转发的 Servlet程序b
+     - 本身在a的键值对会睡着请求结束而消失
+
+
+* 重定向与转发
+
+** 转发
+
+*** 概述
+
+**** 执行转发， 浏览器 把 请求(Request对象) 提交给 服务器， 服务器 把 响应(Reponse对象) 传输给浏览器， 让浏览器显示。
+     - 跳转发生在服务器
+
+**** 根目录
+     - 转发 的 根目录 在 服务器 https://localhost:8080/Project/
+     - 转发路径 必须是 同一个 web 容器的 url， 不能转向其他的web路径
+
+**** 地址栏
+     - 不会发生变化
+
+**** 跳转位置
+     - 在服务器端进行跳转
+
+**** 请求次数
+     - 1次
+
+**** 请求域数据
+     - 不会丢失
+
+
+*** 方法
+
+**** RequestDispatcher getRequestDispatcher("/Servlet地址")
+     - 这是 HttpServletRequest 的 实例方法， 返回 RequestDispatcher 类型。
+
+**** follow(HttpServletRequest, HttpServletResponse)
+     - 这是 RequestDispatcher 的 实例方法， 实现跳转
+
+
+** 重定向
+
+*** 概述
+
+**** 执行重定向， 浏览器 把 请求 提交给 服务器， 服务器 接受后， 发送 响应码 及 新的 location 给浏览器， 浏览器 根据 响应码 再次「自动」发送一个新请求，请求的是新的location地址， 服务器根据请求寻找资源发送给客户
+     - 浏览器实现跳转， 地址栏改变
+     - 浏览器a request 1 给 服务器b ， b reponse 1回来 告诉浏览器a 要去 request 2(并且带了响应码),  浏览器地址栏就改变了， 回退按钮也亮了
+
+**** 根目录
+     - 重定向 的 根目录 在 浏览器 https://localhost:8080/
+     - 重定向 可以访问 web 应用以外的 资源
+
+
+**** 地址栏
+     - 会发生变化
+
+**** 跳转位置
+     - 在浏览器端进行跳转
+
+**** 请求次数
+     - 2次
+
+**** 请求域数据
+     - 会丢失
+
+
+*** 方法
+
+**** sendRedirect("根目录/Servlet地址")
+     - 这是个 HttpServletResponse 的实例方法
+
+
+** 理解
+
+*** Servlet
+
+**** 首先 Servlet 是 在服务器的程序， 是 运行在 Web容器 中， 处理用户请求， 做出响应
+
+**** 转发 是 请求 对象的方法
+     - 浏览器提交 要求服务器来实现跳转， 毕竟 请求 是 浏览器的行为， 让服务器找到是否有这个目录， 响应给 浏览器， 让浏览器跳转
+
+**** 重定向 是 响应 对象的方法
+     - 服务器响应 要求浏览器实现重定向， 毕竟 响应 是 服务器的行为， 让服务器响应第一个请求， 然后让浏览器传送第二个请求， 再在服务器完成重定向， 在响应给浏览器
+
+
+* HttpServletResponse (响应对象)
+
+** 概述
+
+*** 什么是Http响应?
+    - 服务器发送给 浏览器的 所有数据 ， 被包装成一个对象 ServletResponse 对象。 有个子接口: HttpServletResponse
+
+
+*** 响应 组成
+
+**** 响应行
+
+***** 组成
+      - 协议和版本
+
+      - 状态码
+
+      - 状态信息
+
+
+**** 响应头
+
+***** 组成
+      - Location:
+        - 重定向跳转到的地址
+
+      - Server
+	- 服务器名字
+
+      - Content-Encoding
+	- 服务器压缩格式
+
+      - Content-Length
+	- 响应的长度
+
+      - Content-Type
+	- 服务器传送过来的数据类型和字符集
+
+      - Refresh
+	- 跳转
+	- Refresh: 1;url=/day27/hello.html 1秒跳转到 hello.html
+
+      - Content-Disposition
+	- 内容的处理方式
+	- Content-Disposition: attachment; filename=*.zip
+	- attachment: 以附件的方式下载	filename: 下载时的文件名
+
+
+**** 响应体
+
+***** 由服务器发送给浏览器的数据
+      - 什么照片啊， 什么html啊...
+
+
+*** 
+
+** 方法
+
+*** 设置 响应行 方法
+
+**** void setStatus(int var1);
+     - 帮 网页设定 状态码
+
+
+*** 编码格式
+
+**** void setContentType(String var1);
+     - 设定响应对象的 类型 和 编码格式	(response.setContentType("text/html;charset=utf-8"));
+
+
+*** 重定向
+
+**** void sendRedirect(String var1) throws IOException;
+     - 重定向到 载入参数 的地址
+
+
+* 
+** 
+*** 
+**** 如果有xml文件就用xml文件 设定 定位符 标识符 的信息， 没有就用 注解(这个更常用)
+***** 注解 @WebServlet
+      - 
+	#+BEGIN_SRC java
+	@WebServlet (urlPatterns = "/标识符")
+	// 为什么要有 '/' 因为不然就 去了根目录找， 没进项目找， 找不到啊， 因为标识符在 项目里
+	#+END_SRC
+**** 首先要创建个类 继承 HttpServlet 类， 这个类可以处理 Http 信息
+**** 
+*** HttpServlet
+**** 
+
+* 问题
+
+** 已解决
+
+*** 重定向第一次响应， 响应的是什么?
+    - 新的地址 跟 响应码
+*** Web容器是什么?
+    - 容器 一个对象存放另一个对象， 前者就是后者的容器
+    - tomcat就是一个web容器
+    - Servlet 可以是容器， tomcat 也可以是容器， 相对谁来说的， tomacat明显就是 servlet的容器
+      - 浏览器 访问 服务器， 发送请求， web服务器接收请求后传递给 「Servlet容器」
+      - Servlet容器加载Servlet ， 生成 Servlet实例， 向 Servlet实例 传递 请求 响应 对象
+      - Servlet 实例使用 请求对象 得到 浏览器(客户端) 的请求信息， 进行处理
+      - Servlet 实例将处理结果 通过 响应对象， 返回给 客户端
+*** 为什么要有 Servlet
+    - 因为实现 传输处理 监听接口 解析http ...交给 Tomcat ， 我们都是垃圾， 不懂这么复杂的数据控制，  Servlet是 接口， 为了规范， 我们就是根据他的规范来处理数据
+
+
+** 未解决
+
+*** Dao 是什么?

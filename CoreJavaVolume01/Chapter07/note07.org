@@ -1,0 +1,794 @@
+* 第7章	异常、断言和日志
+- 重点:
+	- 处理错误
+
+	- 捕获异常
+
+	- 使用异常机制的技巧
+
+	- 使用断言
+
+	- 记录日志
+
+	- 调试技巧
+
+*** 	程序出错的原因: 内部环境(程序设计不行)、 外部环境(服务器炸了、断网、攻击、沙雕用户乱入数据...)
+
+**** 		虽然出错了， 但还是希望
+		- 向用户通告错误
+		- 保存所有的工作结果
+		- 允许用户一妥善的形式退出程序
+		
+**** 		关于测试
+		- 大量的检测非常耗时，并且测试完不必保留他们， 删掉后， 在其他测试需要时将他们粘贴回来
+		- 这里会介绍断言来选择启用检测
+
+
+** 7.1 处理错误
+
+   - 正常的方法都能返回错误码， 但是不是任何错误情况都能返回错误码
+
+**** 异常处理的任务:
+     - 我的理解就是『把屎扫到厕所』，让厕所处理屎
+       - 将控制权从错误产生的地方转移给能够处理这种情况的『错误处理器』 
+
+**** 异常处理的目的: 出现错误时
+     - (1) 返回到安全状态
+       - 让用户执行一些能操作的指令、而不是看着报错一直发呆
+     - (2) 允许用户保存所有操作的结果， 妥善终止程序  
+       -
+
+**** 异常的4类经典问题
+
+***** (1) 用户输入错误
+
+***** (2) 设备错误
+      - 打印机没纸、硬件故障...
+
+***** (3) 物理限制
+      - 内存爆了、硬盘满了
+
+***** (4) 代码错误
+
+
+**** exception handler(异常处理器)
+
+     - 能够根据 『异常处理机制』搜索后，能够处理异常状况的功能。
+
+     - 毕竟有时候错误返回的值很可能是一个完全合法的结果。
+
+
+*** 7.1.1 异常分类
+
+- 异常对象 都是 派生 『Throwable』类的一个实例(实例对象)。
+
+- 如果Java内置的类不能满足需求， 可以自己造异常类
+
+- Throwable下面只有两个分支，Error 和 Exception
+
+
+**** Error
+     
+     - 概念: Error类层次结构描述了Java运行时系统的内部错误和资源耗尽错误
+
+     - 处理: 这种问题不应该抛出这类型的对象， 如果这种情况出现， 删库跑路吧(笑， 通知用户、终结程序吧)
+
+**** Exception
+
+     - 概念: 这个又划分两个分支。 RuntimeException 和 不是 RuntimeException (查看他的Api， 看他是不是extends RuntimeException， 没有就不是 RuntimeException的分支)
+
+***** RuntimeException 分支
+
+      - 特点: 这是由于『程序错误』导致的异常， 是最有可能拯救的
+	- 如果出现 RuntimeException 异常， 一定是你的问题
+
+      - 出现情况:
+	- 错误的类型转换
+
+	- 数组访问越界
+
+	- 访问null指针
+
+	- ...
+
+      - 解决方法:
+	- 错误的类型转换 普遍都是 开箱 跟 封箱 的问题， 泛型可能帮到你。
+
+	- 通过检测数组下标是否越界 来 避免 ArrayIndexOutOfBoundsException 异常
+
+	- 通过使用变量之前检测是否为 null 来杜绝 NullPointerException 异常的发生
+
+	- ...
+
+***** 非 RuntimeException 分支
+
+      - 特点: 程序没问题、由于外部因素(像I/O错误这类情况) 导致异常的异常 属于 『其他异常』
+
+
+      - 出现情况:
+	- 试图在文件尾部后面读取数据
+
+	- 试图打开一个不存在的文件
+
+	- 试图根据给定的字符串查找Class对象， 而字符串表示的类并不存在。
+
+	- ...
+
+
+      - 解决方法:
+	- 不存在的文件， 可以先检查是否存在、再打开， 有可能在你检查之前已经被删除了
+	  - 是否存在取决与“环境”， 而不只是取决与 程序
+
+**** unchecked 异常
+
+     - 所有 派生与 Error 或者 RuntimeException 类的 所有异常 都称为 『非受查异常(unchecked)』
+       - 编译器无法检查的异常
+
+**** checked 异常
+
+     - 所有非 unchecked异常的 类 都是 受查异常(checked)
+       - 编译器可以检查的异常
+
+**** 总结
+     - Throwable类专门搞异常的， 他有Error 跟 Exception 两个子类，
+     - Error 是难以预防的问题， 也难以解决的。
+     - Exception 又分为两类， RuntimeException(继承 Exception) 的子类 跟 直接继承 Exception 的非 RuntimeException分支
+     - Error 跟 RuntimeException 是 非受查异常， 编译器无法检查的异常， 比如 a[-1] 访问null指针...
+     - 其他的异常 属于 受查异常， 编译器可以检查的，
+     - RuntimeException是不应该出现的， 程序员应该尽力避免！ 用异常处理。
+     - 到底要避免哪个异常?
+       - 处理异常 是 为了处理编译器 能检查的 异常 —————— 就是 非 RuntimeException 分支的错误， 受查异常
+       - RuntimeException 分支 的错误， 编译器相信程序员能够自己查出来！
+
+
+
+*** 7.1.2 声明受查异常
+
+**** 为什么要声明
+
+     - 为了让程序能够排除异常正常运行
+     - 如果方法没有声明所有可能发生的受查异常， 编译器会报错，编译不了
+
+**** 如何声明
+
+     - 应该在方法首部声明『所有』有可能抛出的异常
+
+     - ex:
+       #+BEGIN_SRC java
+       public FileInputStream(String name) throws FileNotFoundException
+       // 这是个 标准库提供的 FileInputStream 类的声明
+       // 如果找不到文件会抛出 FileNotFoundException 这个异常
+       // 如果找不到文件，系统不会初始化一个 FileInputStream 的对象， 而是抛出 FileNotFoundException 类对象
+       // 然后系统会搜索 异常处理器， 以便 知道如何 处理 FileNotFoundException 对象
+       #+END_SRC
+
+       - 简单说就是， 先声明异常， 如果出问题就造不造对象看你， 但是抛出 那个异常的对象， 让系统处理， 也让 程序继续呢还是体面死亡
+
+**** 什么时候应该抛出异常
+
+     - (1) 调用一个抛出 受查异常 的方法
+
+     - (2) 程序运行过程中 发现错误， 并且利用 『throw』 语句抛出一个 受查异常
+
+     - (3) 程序出现错误。 (ex: a[-1] = 0 这种会抛出 ArrayIndexOutBoundException 这样的非受查异常 (编译器无法检查的异常))
+
+     - (4) Java 虚拟机 和 运行时库 出现的 『内部错误』
+
+**** 为什么要抛出异常
+     
+     - 如果没有处理器 捕获这个异常 ， 当前 执行的 『线程』 就会结束
+
+**** exception specification (异常规范)
+
+     - (1) 在方法首部(方法声明) 声明这个方法可能抛出的 异常
+
+     - (2) 声明多个异常 —————— 用(,)逗号分隔
+       - ex:
+	 #+BEGIN_SRC java
+	 public Image loadImage(String s) throws FileNOtFoundException, EOFException
+	 // 这里声明了 FileNOtFoundException EOFException 两个可能 出现的异常
+	 #+END_SRC
+
+     - (3) 不需要声明 从 Error 继承的错误
+       - 任何程序代码都具有 抛出 Error 的潜能， 而我们对其没有任何控制能力
+
+     - (4) 不应该声明 从 RuntimeException 继承的错误
+       - 完全在我们控制下， 专注， 小心就能避免了
+
+
+**** 警告
+     - 如果父类的方法没有抛出任何异常， 继承的子类重写方法也不能抛出任何异常， 只能用其他方法避免！
+
+     - 如果父类抛出了父类的异常， 那么子类可以抛出更特定的继承的(父类的)异常 的异常
+
+**** Example
+     - 这是个不正确的例子， 只是拿来用来示范
+       #+BEGIN_SRC java
+       public class MainTest  {
+           public static void main(String[] args) {
+	       Integer[] arr = new Integer[]{1,2,3,4,5};
+	       printarr(arr, -1);
+           }
+
+	   public static <T> void printarr(T[] a, int b) throws ArrayIndexOutOfBoundsException{
+               System.out.println(a[b]);
+	   }
+       }
+
+       #+END_SRC
+
+*** 7.1.3 如何抛出异常
+
+**** Why 要抛出异常
+
+     - C语言 用返回值来表示 是否成功运行函数， 面向对象可以 把出错信息做成类型， 可以在 异常中获得更多信息
+     - 既然声明了异常， 你要抛出来才能让调用者决定 继续不继续下去， 不然程序会直接死在 异常的方法上，因为没人处理， 会把问题交给调用main的JVM处理
+
+**** How 抛出异常
+     - 使用 throw
+
+     - 格式(1)
+       #+BEGIN_SRC java
+       throw new EOFException();
+       #+END_SRC
+
+     - 格式(2)
+       #+BEGIN_SRC java
+       EOFException e = new EOFException();
+       throw e;
+       #+END_SRC
+
+     - 结构
+       - (1) 找到一个合适的异常类
+
+       - (2) 创建这个类的一个对象
+
+       - (3) 将这个对象抛出
+
+**** What 情况
+
+     - 一旦抛出异常， 这个方法就不可能返回到『调用者』, 不必为返回的默认值或错误代码担忧
+       调用者， 谁调用， 谁就是调用者， 可以是对象， 可以是类...
+**** Example
+     #+BEGIN_SRC java
+     public class DeclarationException  {
+         public static void main(String[] args) {
+             Integer[] arr = new Integer[]{1,2,3,4,5};
+             printarr(arr, 1);				// 这里设定了 <2 也会跳出异常, 实际没有异常， 只是为了演示异常
+	 }
+
+	 public static <T> void printarr(T[] a, int b) throws ArrayIndexOutOfBoundsException{
+             if (b < 2) {
+                 ArrayIndexOutOfBoundsException e = new ArrayIndexOutOfBoundsException();
+                 throw e;
+             }
+             System.out.println(a[b]);
+	 }
+     }
+     #+END_SRC
+
+
+*** 7.1.4 创建异常类
+
+**** Why 要创建异常类
+
+     - 可能会遇到任何标准异常类都没有能够充分地描述清除的问题。
+
+**** How 创建异常类
+
+     - 定义一个派生于 『Exception』 或者 『Exception』 的子类 的类。
+     - 要有构造器， 不然怎么生成 异常类的对象
+     
+**** Example
+     #+BEGIN_SRC java
+     public class MainTest02 {
+          public static void main(String[] args) {
+               Integer[] arr = new Integer[]{1,2,3,4,5};
+               printarr(arr, 1);
+          }
+
+          private static <T> void printarr(T[] arr, int b)  throws ArrayIndexLow {
+               if (b < 2) {
+                    ArrayIndexLow e = new ArrayIndexLow("不能小于2");
+                    throw e;
+               }
+          System.out.println(arr[b]);
+          }
+     }
+     #+END_SRC
+
+结果:
+
+#+BEGIN_SRC sh
+Exception in thread "main" com.flan.DeclarationException.ArrayIndexLow: 不能小于2
+	at com.flan.DeclarationException.MainTest02.printarr(MainTest02.java:11)
+	at com.flan.DeclarationException.MainTest02.main(MainTest02.java:6)
+#+END_SRC
+
+** 7.2 捕获异常
+
+   - 知道 声明异常、 抛出异常， 要知道如何 『捕获异常』， 需要进行周密的计划
+
+*** 7.2.1 捕获异常
+
+**** Why 捕获异常
+
+     - 异常发生不捕获， 那程序就会终止执行， 异常会被抛到JVM， JVM 干死了程序
+     - 然后打印了异常信息， 『异常类型』 『堆栈的内容』
+
+     - 捕获的话， 程序将返回用户界面的处理循环中， 就是让程序不死
+     - 没理由因为用户乱输入， 网站就要被干死吧?
+
+**** What 捕获异常
+
+     - try/catch 组合
+
+**** How 捕获异常
+
+     - 格式
+       #+BEGIN_SRC java
+       try {
+           code
+	   more code
+	   more code
+       } catch (ExceptionType e) {
+           handler for this type
+       }
+       #+END_SRC
+
+**** What try/catch运作原理
+
+     - try 语句块中的任何代码 抛出 一个异常， 会到catch子句中 判定是不是字句中说明的异常类
+     - 如果是
+       - (1) 程序将跳过try语句块的其余代码
+       - (2) 程序将执行 catch 子句中的处理代码
+
+     - 如果不是
+     - (1) 程序会跳过 catch 子句
+
+**** 例子1:
+     - 这个例子是 把异常在 运行中处理了
+     - ex:
+       #+BEGIN_SRC java
+       public class TryCatchDemo01 {
+           public static void main(String[] args) {
+
+	       Integer[] arr = new Integer[] {1,2,3,4,5,6};
+	       try {
+    	           for (int i = arr.length - 1; ; i--) {
+                   System.out.println(arr[i]);
+	       } 
+	       } catch (ArrayIndexOutOfBoundsException e) {
+                   System.out.println("执行catch语句！");
+		   // e.printStackTrace();
+               }
+	   }
+       }
+       #+END_SRC
+
+     - 结果:
+       #+BEGIN_SRC sh
+       6
+       5
+       4
+       3
+       2
+       1
+       执行catch语句！
+
+       Process finished with exit code 0
+       #+END_SRC
+
+
+**** 例子2:
+     - 这个方法是 把让 调用的那个方法 把异常处理了
+     - ex: TryCatchDemo02.java
+       
+       #+BEGIN_SRC java
+       public class TryCatchDemo02 {
+           public static void main(String[] args) {
+
+               Integer[] arr = new Integer[] {1,2,3,4,5,6};
+               try {
+                   for (int i = arr.length - 1; ; i--) {
+                   printarr(arr, i);
+               }
+               } catch (ArrayIndexLow e) {
+                   System.out.println("不能小于1");
+		   e.printStackTrace();			// 生成了栈轨迹
+               }
+           }
+
+           private static <T> void printarr(T[] arr, int b) throws ArrayIndexLow {
+
+               if (b < 1) {
+                   ArrayIndexLow e = new ArrayIndexLow();
+                   throw e;
+               }
+               System.out.println(arr[b]);
+           }
+       }
+       #+END_SRC
+
+     - ex: ArrayIndexLow.java
+       #+BEGIN_SRC java
+       public class ArrayIndexLow extends ArrayIndexOutOfBoundsException{
+           public ArrayIndexLow() {
+               System.out.println("太少了");
+           }
+
+           public ArrayIndexLow(String gripe) {
+               super(gripe);
+           }
+       }
+     #+END_SRC
+
+     - 结果:
+       #+BEGIN_SRC java
+       6
+       5
+       4
+       3
+       2
+       太少了
+       不能小于1
+       com.flan.DeclarationException.ArrayIndexLow
+           at com.flan.DeclarationException.TryCatchDemo02.printarr(TryCatchDemo02.java:20)
+           at com.flan.DeclarationException.TryCatchDemo02.main(TryCatchDemo02.java:9)
+
+       Process finished with exit code 0
+       #+END_SRC
+       
+     - 运行解释:
+       - (1) 程序进入try的for循环里面， 当 printarr 方法遇到异常(实际上没有， 我制造的异常)， 就抛出了那个异常对象
+
+       - (2) 抛出异常 就跳出了 for循环， 发现抛出了异常对象是catch声明的异常类型
+
+       - (3) 进入『catch』子句， 并『生成了栈轨迹』(e.printStackTrace)
+
+**** 通常，最好的选择
+
+     - 把异常抛给 调用者
+       - 哪个方法出现异常， 就把那个方法的调用者去操心
+
+     - 但是这样做, 就必须把方法声明 throws， 这是例子2 的做法， 例子1 的做法是把 异常自己处理了
+
+**** 哪个方法更好
+     
+     - 如果父类的方法声明异常， 子类的重写方法不能声明， 必须自己处理
+
+     - 平时自己写方法的时候， 就应该声明好！ 自己看API ， 自己看可能遇到的异常API是否有， 有就直接 throws 那个异常类
+
+*** 7.2.2 捕获多个异常
+
+**** Why 要捕获多个异常
+     - 因为很多时候， 不只一个异常啊！
+
+**** What
+     - 还是 try/catch
+
+**** How 捕获多个异常
+     - 格式:
+       #+BEGIN_SRC java
+       try {
+           code that might throw exceptions
+       } catch (Exception1 e){
+           handler for this type
+       } catch (Exception2 e){
+           handler for this type
+       } catch (Exception3 e){
+           handler for this type
+       } catch (Exception4 e){
+           handler for this type
+       } ...	   
+       #+END_SRC
+
+     - 很通常是:
+       #+BEGIN_SRC java
+       try {
+           ...
+       } catch (Exception e) {
+           ...
+       }
+       #+END_SRC
+
+       - 因为Exception 就是所有 异常的父类
+
+     - 1.7 之后可以把 Exception并列 
+       #+BEGIN_SRC java
+       try {
+           code that might throw exceptions
+       } catch (Exception1 | Exception2 ){
+           handler for this type
+       } catch (Exception3 | Exception4 e){
+           handler for this type
+       } ...	   
+       #+END_SRC
+       
+       - 警告: 并列的 Exception 类型之间 必须不存在子类关系时 才可以使用
+	 #+BEGIN_SRC java
+	 catch (ArrayIndexOutOfBoundsException | ArrayIndexLow e)
+	 // 这个肯定不行， ArrayIndexLow 是 ArrayIndexOutBoundException 的子类
+	 #+END_SRC
+
+     - 好处:
+       - 提高代码 可观性
+
+*** 7.2.3 再次抛出异常与异常链
+
+**** What is 再次抛出异常与异常链
+     - 在 catch语句 再次抛出异常， catch本来就是处理 异常、 再次抛出， 抛去哪， 怎么处理这个异常?
+
+**** Why
+     - 是为了 改变异常的类型， 有时候 调用者不想知道这一层的异常是啥， 他只知道自己那一层异常是啥
+     - 然后， 他可以统一处理 他那一层的异常， 那他所调用的那些方法 的异常 捕获起来，
+     - 然后 构造一个调用者知道 并且 知道怎么处理的 异常对象， 让调用者统一处理
+     - 简单说就是为了统一处理
+
+**** How
+     - ex:
+       #+BEGIN_SRC java
+       try {
+           access the database
+       } catch (SQLException e) {
+           throw new ServletException("database error: " + e.getMessage());    
+       }       
+       #+END_SRC
+
+     - or: (这种更好， 因为他创建了个对象地址(变量) , 之后想仔细查询 这一层的异常， 可以调用这个变量)
+       #+BEGIN_SRC java
+       try {
+           access the database
+       } catch (SQLException e) {
+           Throwable se = new ServletException("database error: ");
+	   se.initCause(e);
+	   throw se;
+       }
+       #+END_SRC
+       - 好处: 可以让用户抛出 子系统 的高级异常， 而不会失去原始异常
+
+     - 调用者想查询调用的方法的 异常时
+       #+BEGIN_SRC java
+       Throwable e = se.getCause();
+       #+END_SRC
+
+**** 包装异常
+     - 如果方法不允许抛出异常(比如父类没声明), 可以捕获那个异常， 并把它包装成一个运行时异常
+     - ex:
+       #+BEGIN_SRC java
+       try {
+           access the database
+       } catch (Exception e) {
+           logger.log(level, message, e);
+	   throw e;
+       }
+       #+END_SRC
+     - 这样写子类的方法就不用担心 无法处理异常了
+     - 注意: 1.7运行这个， 会 抛出所有 Exception 异常，然后被 包装， 1.7会追踪所有try的异常
+
+*** 7.2.4 finally 子句
+    - 当代码抛出异常， 就会终止『方法』 中剩余代码的处理， 并退出这个方法的执行。
+
+**** What 抛出异常出现的问题
+
+     - 如果方法在内存中分配了资源， 又如果退出方法之前 必须回收， 就会产生资源回收问题
+
+       - ex: 当try块中出现了异常， 抛出异常， 跳出try， try如果打开的文件没关闭， 连接的网络没断开，对这些浪费的内存没有回收怎么办
+	 
+       - ex: 方法都一样， 出现异常， 就跳出方法， 方法如果打开了文件、或者传输， 怎么办
+
+**** 解决方法
+     - (1) 捕获并重新抛出所有异常 —————— 枯燥
+       - 要在 正常的代码(调用者代码下一行, 或者try以外)中， 异常的代码(try中)中 清除所分配的资源
+     - (2) finally 语句
+
+**** What is finally
+     - finally 语句 在 try/catch 中， 无论是否有异常， finally 中的代码都会被执行
+
+**** 例子:
+     - ex:
+       #+BEGIN_SRC java
+       public class FinallyDemo {
+           public static void main(String[] args) {
+
+               Integer[] arr = new Integer[]{1,2,3,4,5,6};
+
+	       prinarr(arr, 2);
+	       prinarr(arr, -2);
+	       prinarr(arr, 0);
+           }
+
+           private static <T> void prinarr(T[] a, int b) {
+               try {
+	           System.out.println(a[b]);
+	       } catch (ArrayIndexOutOfBoundsException e) {
+	           System.out.println("不能少于0啊, 哥");
+	       } finally {
+	           System.out.println("执行了finally");
+		   System.out.println("---------------------");
+		   System.out.println();
+               }
+           }
+       }
+       #+END_SRC
+
+     - 结果:
+       #+BEGIN_SRC sh
+       3
+       执行了finally
+       ---------------------
+
+       不能少于0啊, 哥
+       执行了finally
+       ---------------------
+
+       1
+       执行了finally
+       ---------------------
+
+
+       Process finished with exit code 0
+       #+END_SRC
+
+**** 会执行finally的a情况
+     - (1) 代码没有抛出异常
+       - 程序会执行完所有 try 语句块的代码， 然后执行 finally 子句所有代码
+     - (2) 代码抛出一个 catch 子句捕获的异常
+       - 抛出异常代码， 跳过剩余的try语句块， 执行catch 子句所有代码， 最后执行 finally的代码
+     - (3) 代码抛出了一个异常， 异常不是由catch 捕获， 
+       - 而是JVM捕获， 程序会执行， try『所有语句』，除非遇到异常， 然后执行finally， 并把异常抛给调用者
+
+**** 总结:
+     - 无论try有没有遇到异常， finally都会被执行
+
+     - try 可以只有 finally 而没有catch
+
+**** 用途:
+     - 例子:
+       #+BEGIN_SRC java
+       try {
+           // 网址崩溃
+       } finally {
+           // 关闭服务器
+       }
+       #+END_SRC
+
+**** 耦合 try/catch 跟 try/finally 的语句
+     - ex:
+       #+BEGIN_SRC java
+       try {
+           try {
+	       code that might throw exceptions
+	   } finally {
+	       in.close();	// 关闭文件的方法
+	   }
+       } catch {
+           show error message
+       }
+       #+END_SRC
+
+     - 解释:
+       - 内层try只有一个职责， 确保关闭输入流
+
+       - 外层try只有一个职责， 确保报告出现的错误
+
+     - 好处:
+       - 清楚，易了解代码
+
+       - 会报告finally语句 的错误
+
+**** 1.7 之前 finally 其实很多问题 P.277
+     - 比如 finally 有return，
+     - 而且finally 内部块  要检查异常， 这样代码 非常繁琐
+     - 如果try抛出一个异常, finally也抛出一个异常， finally的异常会『被抑制』
+       - 只能用方法去查看
+     - 1.7之后 关闭资源的处理会容易很多
+
+*** 7.2.5 带资源的try 语句
+
+**** What 带资源的try
+     - java se 7 为 try 提供了一个很有用的快捷方式
+
+**** How use
+     - 格式:
+       #+BEGIN_SRC java
+       try (声明) {
+           work ...
+       }
+       #+END_SRC
+
+**** 那个()是啥
+     - 是个声明， 比如声明一个 读取文件中的 单词
+     - ex:
+       #+BEGIN_SRC java
+       try (Scanner in = new Scanner(new FileInputStream("/usr/share/dict/words")), "UTF-8")
+       {
+           while (in.hasNext())
+	       System.out.println(in.next());
+       }
+       #+END_SRC
+     - 解释:
+       - 当这个块要退出， 或者遇到一个异常， 都会调用in.close()方法， 好像使用finally语句
+       - 你在()声明了啥， java都会在块结束时close it
+
+*** 7.2.6 分析堆栈轨迹元素
+    - stack trace
+
+**** What is stack trace
+     - 堆栈轨迹 是一个方法调用过程的 『列表』
+     - 他包含 执行过程 方法调用的特定位置
+
+**** printStackTrace
+     - Throwable 类 有个 printStackTrace 方法 访问轨迹
+       - ex:
+	 #+BEGIN_SRC java
+	 Throwable t = new Trouwable();
+	 StringWriter out = new StringWriter();
+
+	 t.printStackTrace(new PrintWriter(out));
+
+	 String description = out.toString();
+	 #+END_SRC
+
+**** getStackTrace
+     - 这是一个方法， 会得到一个 StackTraceElement 对象的一个 『数组』然后分析这个数组(遍历)
+     - 这个更灵活
+       - ex:
+	 #+BEGIN_SRC java
+	 Throwable t = new Trouwable();
+
+	 StackTraceElement[] frames = t.getStackTrace();
+
+	 for (StackTraceElement frame : frames) {
+	     analyze frame
+	 }
+	 #+END_SRC
+
+     - 功能:
+       - StackTraceElement 类含有获得文件名、 当前代码行号的方法、还有类名和方法名的方法
+
+**** 静态的 Thread.getStackTrace 方法
+     - 可以产生所有『线程』的堆栈轨迹！
+       - P.280
+
+** 7.3 使用异常机制的技巧
+
+- 使用异常机制的几个技巧
+
+**** (1) 异常处理不能代替简单的测试
+
+     - 因为捕获异常(catch异常类)花费时间远超测试
+
+     - 只在异常情况下使用异常机制
+
+**** (2) 不要过分地细化异常
+     
+     - 这样代码及其膨胀
+
+     - 把相似问题(ex: 数组索引 <1 报错， 数组索引 >4 报错), 就可以写在一个try里 (Index < 1 || Index > 4)
+
+     - 可以一致解决的异常应该也可以放在一起
+
+**** (3) 利用异常层次结构
+
+     - 不能只抛出 RuntimeException 异常， 应该寻找更加适当的子类或者自己创建自己的异常类
+
+     - 不能只捕获 Thowable (catch (Thowable e)) ， 这样很难维护， 很难理解代码
+
+     - 能够转化成更适当的异常时候， 不要犹豫
+
+**** (4) 不要压制异常
+
+     - 没啥事， 就不要对那些 长期不触发 的异常， 进行 捕获，
+
+     - 只对觉得重要的异常， 进行处理
+
+**** (5) 检查错误时， “苛刻” 比放任更好
+     - 当那个异常真的要搞， 下手要狠， 而且在代码段越早搞越好,
+     - 比如栈空，会返回null， 在出错的地方抛出 EmptyStackException 要好过 后面 抛出 空子针异常
+
+**** (6) *****不要羞于传递异常*****  重点
+     - 其实在方法上声明异常(传递异常) 比捕获要好
+     - 让高层次的方法通知用户发生错误， 或者放弃不成功的命令 更加适宜
+
+     - 早抛出、晚捕获 才是核心！

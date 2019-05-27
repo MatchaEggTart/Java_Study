@@ -1,0 +1,15 @@
+Java
+sudo ln -sb /opt/Java/jdk1.8.0_211/bin/java /usr/bin/java
+sudo ln -s /opt/Java/jdk1.8.0_211/bin/javac /usr/bin/javac
+
+vi /etc/profil
+export JAVA_HOME=/opt/Java/jdk1.8.0_211
+export PATH=$JAVA_HOME/bin:$PATH
+
+tomcat
+vi /etc/profile
+export CATALINA_BASE=/opt/apache-tomcat-8.5.41
+export CATALINA_HOME=/opt/apache-tomcat-8.5.41
+export PATH=$PATH:$CATALINA_HOME/bin
+
+sudo chmod 777 -R apache-tomcat-8.5.41

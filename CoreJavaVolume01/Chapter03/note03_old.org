@@ -1,0 +1,685 @@
+* 第3章 Java的基本程序设计结构
+** 
+** 3.1 一个简单的Java应用程序
+
+*** 原代码
+#+BEGIN_SRC java
+public class FirstSample {
+    public static void main(String[] args) {
+        System.out.println("We will not use \"Hello, World\"");
+    }
+}
+#+END_SRC
+*** 
+- Java是 区分大小写
+
+*** public 
+
+- public 称为 access modifier (访问修饰符)
+
+**** 修饰符的作用
+
+-用于控制程序的其他部分(其他的包和类)对这段代码的 『访问级别』.
+
+**** 访问修饰符就是 类，属性和方法 的定义分级制度.
+- 4 种访问修饰符
+#+BEGIN_SRC 
+public        : 访问不受限制.
+protected     : 本类 根 本包的其他类, 被继承的外包的子类 都可以访问.
+default(none) : 本类 跟 本包的其他类, 随意访问.
+private       : 只有 本类 可以访问, 本包的其他类都不可以访问
+
+			类	包     子类    其他包
+ public        : 	O	O	O	O
+ protected     : 	O	O	O	X
+ default(none) : 	O	O	X	X
+ private       : 	O	X	X	X
+ #+END_SRC
+**** 
+
+*** class 关键字
+- 表明Java程序中的『全部内容都(必须)包含在类中』.
+
+**** 
+
+*** 类名
+**** 必须以 字母 开头, 可以跟随 字母 数字 下划线
+- 不能用『关键字』(也叫保留字, ex: public static class...) 作为类名
+- P.711 附录A里面有
+
+**** 命名规范
+- 第一个字母应该大写, 单词应该都要首字母大写 ---- 『驼峰法』.
+
+**** 源代码的『文件名』 必须 与 『公共类』的名字相同
+**** 
+
+*** 编译过程
+- Java编译器把『源代码』编译成『字节码』(.class)
+- 最后用 JVM 把 字节码 从 main方法 开始执行
+**** 
+
+*** 注意:
+- main方法 必须 要声明 public, 有些编译器可以给你乱玩(没有public也可以运行), 但是要规范!
+- main方法 必须 是『静态』(static).
+**** 
+
+*** block (块)
+- {..} 这就是一个块. 方法都是从 { 开始, 到 } 结束.
+**** 
+
+*** . (点号)
+- 用于调用方法, AAA.BBB 代表 调用AAA类的BBB方法
+
+#+BEGIN_SRC java
+object.method(parameters)
+#+END_SRC
+**** 
+*** 
+
+** 3.2 注释
+- 有三种注释
+
+*** 单行注释
+
+- (//)
+
+**** 
+
+*** 长篇比较常用注释
+
+**** (/*      */)
+
+- 也可以每行前面 加入 //  
+
+**** 
+
+*** 自动生成文档的注释
+
+**** /**     */
+
+**** 
+
+*** 注意!
+
+- 除了单行注释, 其他注释不能嵌套
+
+**** 
+
+*** 
+
+** 3.3 数据类型
+
+- 8个基本类型(primitive type)
+
+*** 3.3.1 整型
+
+**** int short long byte
+
+***** 
+
+- byte  1 bytes -128   -  127  8位
+
+- short 2 bytes -32768 - 32767
+
+- int   4 bytes -20亿  -  20亿
+
+- long  8 bytes ...
+	长整形数值需要+ L ex: 40000000000000000000L
+
+**** 整型范围很规范, 跟机器无关, JVM就是牛逼!
+
+***** 
+
+**** 0X 0x 0 0B 0b _
+
+- 0X 0x 代表16进制 ex: 0XFF 0x1B2
+
+- 0     代表8进制  ex: 0717 
+
+- 0B 0b 代表2进制  ex: 0B1010  0b11011
+
+- _可以用来把数字字面量更加可视化 ex: 1_000_000_000 Java编译器会去除这些下花谢
+
+***** 
+
+**** Java 没有 unsigned 所有整型都有signed!
+
+***** 
+
+**** 
+
+*** 3.3.2 浮点类型
+
+**** float double
+
+***** 
+
+- double 8 bytes ...
+
+	没有后缀的小数默认都是double
+
+- float  4 bytes ...
+	单精度类型需要+ F ex: 3.14F
+
+**** double精度是float的两倍, 很少会用float类型,
+
+***** 
+
+**** 2.0 - 1.1
+
+- 会显示 0.89999999999999999999999
+
+	 二进制不能做到完美啦
+
+**** 三个特殊的值
+
+- Double.POSITIVE_INFINITY	(Float.POSITIVE_INFINITY)	正无穷大
+
+- Double.NEGATIVE_INFINITY	(Float.NEGATIVE_INFINITY)	负无穷大
+
+- Double.NaN			(Float.NaN)			不是一个数字
+
+***** 实际很少遇到, 这三个常量, 遵循 IEEE 754 规范
+
+**** NaN
+
+- 意识是 : 不是一个数字, ( X / 0 = NaN )
+
+**** Double.isNaN() 方法
+
+- 用来检查是不是数值
+
+- if (Double.isNaN(x)) // 检查x是不是一个number
+
+
+***** 
+
+*** 3.3.3 char类型
+
+*** 3.3.4 Unicode 和 char类型
+
+**** java, char一般都是 UTF-16 
+
+**** Unicode 用了 2 Bytes (65536) 去存储 字符
+
+**** 但是后来还是爆了, 但是Java一开始就用 16位(2Bytes) 的Unicode字符集.
+
+***** 
+
+**** 码点(code point)
+
+- 是指 一个编码表中的某个字符对应的代码值. Unicode , 码点 都用 16进制书写 , U+0000 ~ U+FFFF
+
+- P.35, 苦涩的一逼
+
+
+**** 我们强烈不建议程序中使用char, 最后将字符串作为抽象数据类型处理.
+
+**** 
+
+*** 3.3.5 boolean类型
+
+**** true false
+
+- 整数值无法与布尔值之间进行互换
+#+BEGIN_SRC java
+if (5) {	// 编译不了的, 跟C 完全不一样
+    
+}
+#+END_SRC
+
+- 在java中,布尔值只能是 true false , 绝对不是 1 或 0
+
+***** 
+
+**** 
+
+** 3.4 变量
+
+- 每个variable都有一个类型(type),
+
+*** 变量命名规则
+
+- $ _ 字母 数字 都可以用
+
+- 必须字母开头
+
+- 有些语言的字母或者中文也可以用, 但是还是英文吧!
+
+- $ 可以用, 但是不是给你用的, 是java编译器或其他工具生成的名字!
+
+- 不要用『保留字』(关键字) 作变量名
+
+-  P. 710
+
+**** 可以一行多声明, 但是不规范
+#+BEGIN_SRC java
+int i, j;
+int i = 2, j = 5;
+#+END_SRC
+
+***** 
+
+*** 3.4.1 变量初始化
+
+**** 声明变量, 应该立刻用『赋值』语句对变量进行『初始化』.
+
+**** 未初始化的变量, 是不允许使用! 因为, java声明变量跟C不一样, 他不会给个值, 必须自己给!
+
+**** 所以声明应该尽可能靠近变量第一次使用的地方
+
+**** 赋值最后跟声明一起, 当然你也可以分行
+
+#+BEGIN_SRC 
+int i;
+i = 5;			// OK
+
+int i = 5;		// OK
+
+int j;
+System.out.println(j);	// Fuck you
+#+END_SRC
+
+***** 
+
+**** C区分声明(int i;)与定义(int i = 10;) , java不区分.
+
+**** 
+
+*** 3.4.2 常量
+
+**** final 关键字
+
+- 虽然java留着const过年, 但是傻屌才用!
+
+- final 关键字表示 这个变量只能被赋值一次.
+
+- 全部 大写 加上 下划线 是规范
+
+***** 
+
+**** static final
+
+- 这个关键字会使 变量变成 类常量. 一个类中 多个方法都可以拿来使用(公交车~)
+
+- 必须在方法外, 因为这是属于 类的常量, 只有一个!
+
+***** 
+
+**** public static final
+
+- 这样的变量 其他类 都可以问候了
+
+***** 
+
+**** 代码
+#+BEGIN_SRC java
+public class Constansts {
+    public static void main(String[] args) {
+        final double CM_PER_INCH ;
+        CM_PER_INCH= 2.54;	// it's ok
+        double paperWidth = 8.5;
+        double paperHeight = 11;
+        // CM_PER_INCH = 3;     can't do this, error
+        System.out.println("Paper size in centimeters: "
+        + paperWidth * CM_PER_INCH + " by " + paperHeight * CM_PER_INCH);
+    }
+}
+
+#+END_SRC
+
+***** 
+
+**** 
+
+** 3.5 运算符
+
+-  +
+-  -
+-  *
+-  /
+-  %
+**** 整数   被 0 整除会产生一个 异常.
+ -
+**** 浮点数 被 0 整除会产生 无穷大(Double.POSITIVE_INFINITY) or NaN 结果
+
+**** 注释:  strictfp
+ - 默认情况下, 虚拟机允许对中间计算结果采用拓展的精度.( 速度快,而且精准. 但是不用cpu结果可能不一样)
+ - 使用strictfg情况, 虚拟机会所有的『中间计算』统一截断, 那样嗯在不同系统中都能统一结果. ( 截断操作需要时间, 速度慢 )
+
+ ex:
+ #+BEGIN_SRC java
+ public static strictfp void main(String[] args)
+ #+END_SRC
+
+*** 3.5.1 数学函数与常量
+- Math类
+
+#+BEGIN_SRC java
+import static java.lang.Math.*;
+#+END_SRC
+
+**** sqrt()
+
+- 平方根
+- Math中的静态方法, Math.sqrt(x)
+
+**** pow()
+
+- 求幂
+- Math中的静态方法, Math.pow(x, a) = x的a次幂的结果 (ex: x = 2, a = 3, 结果就是 8)
+
+**** floorMod()
+
+#+BEGIN_SRC java
+import static java.lang.Math.floorMod;
+#+END_SRC
+
+- n % 2 = a;
+- 如果 n = 正数, a = 0 or 1
+- 如果 n = 负数, a = -1 (这是计算机的设定问题)
+- floorMod(x, y)一定是正数. 
+- y 如果是 负数, floorMod 还是会输出 负数.
+
+**** Math类的三角函数
+
+- Math.sin
+- Math.cos
+- Math.tan
+- Math.atan
+- Math.atan2
+
+**** Math类的指数
+
+- Math.exp
+- Math.log
+- Math.log10
+
+**** pi e
+
+- Math.PI
+- Math.E
+
+**** StricMath
+
+- 更精准 P.40
+
+*** 3.5.2 数值类型之间的转换
+
+**** 自动类型转换
+
+- 如果两个数值进行运算(优先级)
+- 有double 优先 将另一个转double
+- 有float  优先 将另一个转float
+- 有long   优先 将另一个转long
+- 其他的        将转为    int
+- 
+- 所以
+#+BEGIN_SRC java
+byte a = 2;
+byte b = 3;
+byte c = a + b;		// Error
+
+---------------------------------
+
+byte a = 2;
+byte b = 3;
+byte c = (byte)(a + b);	// OK, (a + b) is usb the int to calculer
+
+---------------------------------
+
+byte a = 3 + 5;		// OK
+
+byte a = 20000 + 5;	// Error
+
+byte a = (byte)(20000 + 5);	//OK
+
+---------------------------------
+
+double a = 10000F + 2;	// OK, (10000F + 2) will transfet (10000D + 2D)
+#+END_SRC
+
+**** 强制型转换
+
+- cast (强制类型转换)
+ex:
+#+BEGIN_SRC java
+double x = 9.997;
+int nx = (int) x;
+#+END_SRC
+
+- 把范围大的类型强转低范围的会截断数据, 数据丢失
+
+**** 四舍五入
+
+- Math.round(x)
+ex:
+#+BEGIN_SRC java
+double x = 9.997;
+int nx = (int) Math.round(x);
+#+END_SRC
+
+*** 3.5.4 结合赋值和运算符
+
+- +=
+- -=
+- /=
+- *=
+- %=
+
+**** 如果右值与左值类型不同, 会把 右值 强制性转换
+#+BEGIN_SRC java
+int x = 0;
+x += 3.5;	//OK, = (int) (x + 3.5)
+#+END_SRC
+
+*** 3.5.5 自增与自减运算符
+
+**** ++x; --x;
+- 优先x + 1 (x - 1), 后提交x,
+
+**** x++; x--;
+- 优先提交x, 后x + 1 (x - 1), 这种内存会多创造一个x的副本
+
+**** 不建议常使用++, 影响阅读.
+
+*** 3.5.6 关系和boolean 运算符 
+
+****  ==  !=  <  <=  >  >==
+
+**** &&  ||
+- 短路设计, 只要第一个操作数能够确定表达式的值, 就不计算第二个操作数
+
+**** x ? y : z 三元操作
+
+*** 3.5.7 位运算符
+
+**** 掩码
+
+- &
+
+- |
+
+- ^
+
+- ~
+
+- << (用符号位填充)
+
+- >> (用符号位填充)
+
+- >>> (用0 填充高位)
+
+- <<< (不存在)
+
+- P.43
+ 
+*** 3.5.8 括号与运算符级别
+
+- P.44
+
+*** 3.5.9 枚举类型
+
+- enum
+
+#+BEGIN_SRC java
+enum Size { SMALL, MEDIUM, LARGE, EXTRA_LARGE };
+//           0       1       2       4 ?
+#+END_SRC
+
+*** 
+
+** 3.6 字符串
+
+- java 没有 内置 字符串类型, 而是用 『预定义类』 String
+
+*** 3.6.1 子串
+- StringDemo.java
+
+**** substring
+
+- 从字符串中 截取 一个 子串 形成新的字符串. (包头不包尾)
+
+*** 3.6.2 拼接
+- StringDemo.java
+
+**** 用 + 号把两个字符串拼接成一个 新的字符串
+
+**** 用 + 号把一个字符串 跟一个 非字符串 拼接成一个 新的字符串
+- 任何Java 对象 都能 转换成 字符串
+
+**** join()
+
+- 是String类的静态方法, join("x", "y1", "y2", "y3", ...);
+- 用x 把y1 y2 y3 ... 分隔开 变成新的字符串
+
+#+BEGIN_SRC java
+        String all = String.join(" / ", "S", "M", "L", "XL");
+        System.out.println(all);
+//	S / M / L / XL
+#+END_SRC
+
+**** 
+
+*** 3.6.3 不可变字符串
+
+- String类没提供用于修改字符串的方法, String类对象称为 不可变字符串.
+
+**** 优点: 编译器可以让字符串共享, 把字符串存储在公共的存储池(堆里面), String变量都可以指向那个位置
+#+BEGIN_SRC java
+String a = "hello";
+String b = a;		// b 指向"hello" , 字符串共享
+#+END_SRC
+
+**** 改变的方法
+- 如果要把"HelloWorld"的 W 改为 M
+#+BEGIN_SRC java
+	String c = "HelloWorld";
+        String d = c.substring(0, 5) + "M" + c.substring(6);
+        System.out.println(d);
+#+END_SRC
+
+**** 注释
+
+- 应该把字符串变量看成字符指针
+#+BEGIN_SRC C
+char greeting[] = "Hello";	// Wrong!
+
+char * greeting = "Hello";	// Right!
+#+END_SRC
+
+**** 
+
+*** 3.6.4 检测字符串是否相等
+
+**** equals()
+
+- 用法
+#+BEGIN_SRC java
+        String str1 = "Hello";
+        String str2 = "Hello";
+        String str3 = "Hello!";
+        System.out.println(str1.equals(str2));
+        System.out.println(str1.equals(str3));
+#+END_SRC
+
+**** equalsIgnoreCase
+
+- 忽略大小写的比较
+
+**** == 运算符 不能用来检测字符串是否相等
+
+- 只能检测是不是指向 『同一位置』
+
+*** 3.6.5 空串与 Null串
+- 空串 "" 是长度为0 的字符串.
+
+**** 检查方法 length方法
+#+BEGIN_SRC java
+if (str.length() == 0)
+
+// or
+
+if (str.equals(""))
+#+END_SRC
+
+**** 空串是个对象, 长度为0 内容为空
+
+**** null
+- null 表示没有任何对象与该变量关联, (没链接到堆中字符串的变量), 与空串不一样, 空串连了个内容为空的字符串
+
+**** null 的检查方法
+#+BEGIN_SRC java
+if (str == null)
+#+END_SRC
+
+**** 检查字符串 不是 空串, 也不是null
+#+BEGIN_SRC java
+if (str != null && !str.equals("")) // str.length != 0
+#+END_SRC
+
+*** 3.6.6 码点与代码单元
+
+**** length()
+- 字符串长度
+
+**** charAt(n)
+- 获取n位置的字符
+
+**** offsetByCodePoints()
+- ???
+
+**** codePointAt
+- 获取码点的数值(就是ASCII表啦, 我说一般情况)
+
+**** 例子
+#+BEGIN_SRC java
+        String greeting = "Hello";
+        int n = greeting.length();
+        System.out.println("n = " + n);
+
+        int cpCount = greeting.codePointCount(0, greeting.length());
+        System.out.println("cpCount = " + cpCount);
+
+        char first = greeting.charAt(0);
+        char last = greeting.charAt(4);
+        System.out.println("first = " + first + "\tlast  = " + "last");
+
+        int index = greeting.offsetByCodePoints(0, 3);
+        int cp = greeting.codePointAt(index);
+        System.out.println("index = " + index);
+        System.out.println("cp    = " + cp);
+#+END_SRC
+
+
+*** 3.6.7 String API
+- 什么是API
+- java中 String类有50多种方法, 
+- String 的 api 在 java.lang.里面, 自我启动啦
+- P.50
+
+*** 3.6.8
+
+*** 3.6.9
+
+
