@@ -1,5 +1,5 @@
 ---
-typora-root-url: ./
+
 ---
 
 # Servlet
@@ -69,6 +69,6 @@ typora-root-url: ./
 
 - Tomacat-> Container容器-> Engine -> Host-> Servlet容器 -> Context-> Wrapper
 
-  ![TomcatModel](/Pic/TomcatModel.png)
+  ![image](<https://github.com/matchaeggtart/Java_Study/raw/master/JavaWeb/Pic/TomcatModel.png>)
 
 - 真正管理 Servlet 的容器 是 Context容器。
