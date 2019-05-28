@@ -115,8 +115,6 @@
 
 - 一个 Web应用 对应 一个 Context容器， 也就是Servlet运行时的Servlet容器！
 
-- 
-
   - 添加 Web应用 要调用 addWebapp()方法
 
   - 而 addWebapp()方法会 使用 Context类创造实例！
