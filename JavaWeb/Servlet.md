@@ -115,8 +115,6 @@
 
 - 一个 Web应用 对应 一个 Context容器， 也就是Servlet运行时的Servlet容器！
 
-- 
-
   - 添加 Web应用 要调用 addWebapp()方法
 
   - 而 addWebapp()方法会 使用 Context类创造实例！
@@ -350,7 +348,6 @@
   - 事实上 Servlet从 被 web.xml 解析到完成初始化， 这个过程非常复杂， 包括各种容器状态转化引起的监听事件的出发、各种访问权限的控制和一些不可预料的错误发生的判断行为... p.251页有例子
 
 <br>
-
 <br>
 
 # Servlet 体系结构
@@ -502,14 +499,14 @@
 - LifecycleListeners类型
   - ServletContextListener
   - HttpSessionListener
-- 这些接口 涵盖了整个 Servlet 生命周期中感兴趣的事件。 Listener的实现类可以配置在 wen.xml<listener>标签中。
+- 这些接口 涵盖了整个 Servlet 生命周期中感兴趣的事件。 Listener的实现类可以配置在 wen.xml listener 标签中。
   - 除了ServletContextListener在容器启动之后就不能在添加新的， 其他都可以动态添加。因为 ServletContextListenner 监听的时间不会在发生， 因为 servlet已经建好了
 
 ### Spring 监听
 
 - Spring 实现了 ServletContextListener， 当容器加载时启动 Spring容器 ContextLoaderListener 在contextInitialized方法中初始化 Spring容器。 有几个方法 加载 Spring容器
 
-  - 通过 web.xml 的 <context-param>标签中配置Spring 的 applicationContext.xml路径， 文件名随便取
+  - 通过 web.xml 的 context-param 标签中配置Spring 的 applicationContext.xml路径， 文件名随便取
 
   - 如果没有配置， 将在/WEB-INF/路径下查找 默认 applicationContext.xml文件。
 
@@ -535,7 +532,7 @@
 
 ### 是什么
 
-- Filter 是在 web.xml 常用的配置项， 用 <filter> <filter-mapping> 组合来使用 Filter。
+- Filter 是在 web.xml 常用的配置项， 用 filter filter-mapping 组合来使用 Filter。
 - 实际上， Filter可以完成 Servlet同样工作。 甚至更灵活。
 - 除了 request response对象外， 他还有 FilterChain对象， 让我们更灵活低控制请求的流转。
 
@@ -550,7 +547,7 @@
 
 ### Filter类中的三个接口
 
-- init(FilterConfig): 初始化接口， 从 Wrapper对象获得 容器的 环境类 ServletContext对象， 并且在web.xml 的<filter>下配置<init-param>参数值
+- init(FilterConfig): 初始化接口， 从 Wrapper对象获得 容器的 环境类 ServletContext对象， 并且在web.xml 的 filter 下配置 init-param 参数值
 - doFilter(ServletRequest, ServletResponse, FilterChain): 每个用户的请求进来时这个方法都被调用， 而且 在 Servlet的service方法之前调用。 FilterChain参数就是代表当前的整个请求链， 所以用 FilterChain.doFilter 参数的方法 可以继续传递下去 。 这是一个责任链设计模式
 - destroy: 当Filter对象被销毁时， 这个方法被调用， Web容器调用这个方法后， 容器会在调用一次 doFilter (why?)
 
@@ -573,18 +570,22 @@
 
 ### 有什么配置项
 
-- 在 web.xml 中 <servlet-mapping> 和 <filter-mapping> 都有 <url-pattern> 配置项
+- 在 web.xml 中 servlet-mapping 和 filter-mapping 都有 url-pattern 配置项
 
 ### 什么时候配置
 
-- 请求 会分配到 Servlet 是通过 Mapper类 完成， 这个类会根据请求的URL来匹配在每个 Servlet中配置的 <url-pattern>， 所以在一个请求被创建时就已经匹配了。
+- 请求 会分配到 Servlet 是通过 Mapper类 完成， 这个类会根据请求的URL来匹配在每个 Servlet中配置的 url-pattern， 所以在一个请求被创建时就已经匹配了。
 - Filter 的 url-pattern 匹配 是在 创建 ApplicationFilterChain 对象时进行的， 它会把所有定义的 Filter 的 url-pattern 与当前的URL匹配， 匹配成功就把这个Filter保存到 ApplicationFilterChain 的 filters 数组中， 然后在 FilterChain 中依次调用。
 
 ### 匹配失败
 
-- 在 web.xml 加载时， 会检查 url-pattern 配置是否符合规则， 这个检查是在 StandardContext 的 validateURLPattern 方法中检查的， 如果检查不成功， Context 容器启动会失败， 并且报错: java.lang.IllegalArgumentException:Invalid<url-pattern>/a/*.htm in Servlet mapping 错误。
+- 在 web.xml 加载时， 会检查 url-pattern 配置是否符合规则， 这个检查是在 StandardContext 的 validateURLPattern 方法中检查的， 如果检查不成功， Context 容器启动会失败， 并且报错: 
 
-### <url-pattern> 的解析规则
+  ```
+  java.lang.IllegalArgumentException:Invalid<url-pattern>/a/*.htm in Servlet mapping 错误
+  ```
+
+### url-pattern 的解析规则
 
 有三种规则， Servlet 和 Filter 是一样的
 
@@ -593,7 +594,7 @@
   - 路径匹配: 如 /foo/* 会匹配所有前缀是 foo 的 URL
   - 后缀匹配: 如 *.htm 会匹配所有以 .htm 为后缀的 URL
 - 匹配顺序
-  - 如果 Servlet 同时定义了多个 <url-pattern>， 会先用精确匹配， 然后考虑最长路径匹配，最后根据后缀匹配
+  - 如果 Servlet 同时定义了多个 url-pattern， 会先用精确匹配， 然后考虑最长路径匹配，最后根据后缀匹配
   - 一次请求只会成功匹配到一个 Servlet
   - Filter匹配规则 跟 Servlter 有些不同。 只要匹配成功， 这些 Filter 都会在请求链上被调用。
   - 请遵守三种规则， 其他写法都是不允许的。
