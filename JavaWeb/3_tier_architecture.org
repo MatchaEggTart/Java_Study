@@ -240,6 +240,7 @@
      - 只在 「同一次」请求中 使用
      - 一旦 doGet 或者 doPost 代码执行完， 请求就结束， 请求域的数据就会消失
 
+
 *** 方法
 
 **** Object getAttribute("键")
@@ -251,6 +252,7 @@
 **** void removeAttribute("键")
      - 根据键 删除作用域 的 键值对
 
+
 *** 理解
 
 **** 怎么传输
@@ -261,13 +263,159 @@
      - 本身在a的键值对会睡着请求结束而消失
 
 
+** ServletContext 上下文对象
+
+*** 概述
+
+**** 每个Web项目启动的时候都会创建一个对应的上下文对象， 而且只有「一个」。
+
+**** 定义一套 用于 Server 与 Tomcat 之间进行通讯的方法 (ex:写写日志文件， 用于请求转发啊...)
+
+**** 作用
+     - 得到当前工程的资源文件
+     - 作用域的对象
+**** 作用范围
+     - 只要服务器没关闭， 用户都能使用请求 访问或者修改 上面的数据
+
+
+*** 类
+
+**** public interface ServletContext {};
+
+
+*** 方法
+
+**** public ServletContext getServletContext();
+     #+BEGIN_SRC java
+     public ServletContext getServletContext() {
+        return this.getServletConfig().getServletContext();
+     }
+
+     ex:
+     ServletContext context = this.getServletContext();
+     #+END_SRC
+     - 创建个 上下文对象 引用 当前 Web 容器 的上下文对象
+     - 首先这个方法是 GenericServlet 的 实例方法
+
+
+**** InputStream getResourceAsStream(String var1);
+     - 参数是 文件路径名， 把路径的文件流 传给 字节输入流， 参数根路径 是web
+     - 得到 web 目录下的资源,转成一个输入流对象
+
+
+**** ServletOutputStream getOutputStream() throws IOException;
+     - 首先这个方法是 ServletResponse 的 ？？ 方法
+     - 返回一个 字节输出流
+
+
+**** String getRealPath(String path);
+     - web 目录下的资源,得到它在服务器上部署的真实路径
+
+
+**** Object getAttribute(String var1);
+     - 从上下文域中得到值
+
+
+**** void removeAttribute(String var1);
+     - 删除上下文域中的键值对
+
+
+**** void setAttribute(String var1, Object var2);
+     - 向上下文域中添加键和值
+
+
+
+
+
+
+**** Enumeration<String> getAttributeNames();
+     - 获取 上下文对象 的所有 键名
+
+
+*** 理解
+
+**** 就是上下文对象 是在 Web容器 存在， 而且只有一个， 他是个键值对， 每次运行 Tomcat， 它就存在， 可以用来让每个 Servlet 传输数据
+
+**** 生命周期 是 Web容器不结束， 它就不会死。
+
+**** 过程
+     - 先创建 上下文对象
+       #+BEGIN_SRC java
+       ServletContext context = this.getServletContext();
+       #+END_SRC
+
+     - 如果要录入数据去 上下文对象
+       #+BEGIN_SRC java
+       context.getAttribute("键名", "值");
+       #+END_SRC
+
+     - 要获取 请求的参数
+       #+BEGIN_SRC java
+       Object value = request.getParameter("键名");
+       #+END_SRC
+
+     - 把当前 请求的参数 存放在 上下文对象里
+       #+BEGIN_SRC java
+       context.setAttribute("键名", value);
+       #+END_SRC
+
+     - 再在其他 Servlet里 获取这个 参数
+       #+BEGIN_SRC java
+       Object value = context.getAttribute("键名");
+       #+END_SRC
+
+
+*** 下载
+
+**** html 超链接 的 不足
+     - 有些文件 在超链接 是 直接打开 (ex: txt jpg...)
+     - 会暴露真实地址在地址栏， 别人可以 盗链
+     - 不利于控制， 有些人需要用积分去点击， 需要判定
+
+
+**** 理解
+     - 用Java 写个 判定， 用 上下文对象 把文件 变成流
+     - 因为 上下流对象在 Web容器共享， 所以可以 把 流 传给下载链接
+
+
+**** 实际操作
+     - 用 html <a href=Servlet的名字?参数名=参数值>
+       #+BEGIN_SRC html
+       <a href="down?filename=file.txt"></a>
+       #+END_SRC
+       - down 是 一个 Servlet的 urlPatterns
+
+     - 其实就是把 超链接链到那个 传送上下问对象的 Servlet上， 有参数把参数值附上
+
+     - 在 Servlet代码里 创建个 ServletContext， 用 ServletContext 把文件变成流 用 输入流 引用这个流
+       #+BEGIN_SRC java
+       ServletContext context = this.getServletContext;
+
+       InputStream in = context.getResourceAsStream("文件路径");
+       #+END_SRC
+
+     - 关键: 要设置 这个 Servlet 的响应头 ， 设置成 响应是把文件 以附件的方式下载
+       #+BEGIN_SRC java
+       response.setHeader("Context-Disposition", "attachment;filename=" + filename);
+       #+END_SRC
+
+     - 然后创建 输出流 引用 请求的输出流
+       #+BEGIN_SRC java
+       OutputStream out = response.getOutputStream();
+       #+END_SRC
+
+     - 剩下就把 输入流的数据 转去 输出流 就可以了
+
+
+
+
 * 重定向与转发
 
 ** 转发
 
 *** 概述
 
-**** 执行转发， 浏览器 把 请求(Request对象) 提交给 服务器， 服务器 把 响应(Reponse对象) 传输给浏览器， 让浏览器显示。
+**** 执行转发， 浏览器 把 请求(Request对象) 提交给 服务器， 服务器 把 响应(Response对象) 传输给浏览器， 让浏览器显示。
      - 跳转发生在服务器
 
 **** 根目录
@@ -302,7 +450,7 @@
 
 **** 执行重定向， 浏览器 把 请求 提交给 服务器， 服务器 接受后， 发送 响应码 及 新的 location 给浏览器， 浏览器 根据 响应码 再次「自动」发送一个新请求，请求的是新的location地址， 服务器根据请求寻找资源发送给客户
      - 浏览器实现跳转， 地址栏改变
-     - 浏览器a request 1 给 服务器b ， b reponse 1回来 告诉浏览器a 要去 request 2(并且带了响应码),  浏览器地址栏就改变了， 回退按钮也亮了
+     - 浏览器a request 1 给 服务器b ， b response 1回来 告诉浏览器a 要去 request 2(并且带了响应码),  浏览器地址栏就改变了， 回退按钮也亮了
 
 **** 根目录
      - 重定向 的 根目录 在 浏览器 https://localhost:8080/
@@ -397,6 +545,7 @@
 
 *** 
 
+
 ** 方法
 
 *** 设置 响应行 方法
@@ -405,10 +554,47 @@
      - 帮 网页设定 状态码
 
 
+*** 设置 响应头 方法
+
+**** void setHeader(String var1, String var2);
+     - 第一个参数是当前 名字， 第二个参数是 值
+
+     - 如果要实现 跳转 ， 先找到 urlPatterns ， 给它 一个跳转值 302
+     - 必须设置了 响应行的 状态， 才能实现跳转
+     - 参数2 记得 写上 http/https... 不然编译都过不了
+     - 配合 setStatus 等价于 sendRedirect()
+     - 例子
+       #+BEGIN_SRC java
+        out.println("<span id='time'>3</span> 秒");
+        out.println("<script src='js/out.js'></script>");
+        response.setHeader("refresh", "3;login.html");
+
+	out.println("<span id='time'>3</span> 秒");
+        out.println("<script src='js/out.js'></script>");
+        response.setHeader("refresh", "3;url=http://www.baidu.com");
+       #+END_SRC
+
+**** void setContentType(String var1);
+     - 设置响应的内容类型,功能上与 setHeader("content-type", "值") 相同
+     - setContentType("text/html;charset=utf-8");
+
+
+**** void setCharacterEncoding(String charset);
+     - 设置响应的字符集,设置打印流的编码
+
+
 *** 编码格式
 
 **** void setContentType(String var1);
      - 设定响应对象的 类型 和 编码格式	(response.setContentType("text/html;charset=utf-8"));
+
+
+**** 有三种方式设置 响应输出 utf-8
+     - resp.setContentType("text/html;charset=utf-8");
+     - resp.setHeader("Content-Type", "text/html;charset=utf-8");
+     - resp.setCharacterEncoding("utf-8"); (这个乱码了)
+
+
 
 
 *** 重定向
@@ -417,20 +603,7 @@
      - 重定向到 载入参数 的地址
 
 
-* 
-** 
-*** 
-**** 如果有xml文件就用xml文件 设定 定位符 标识符 的信息， 没有就用 注解(这个更常用)
-***** 注解 @WebServlet
-      - 
-	#+BEGIN_SRC java
-	@WebServlet (urlPatterns = "/标识符")
-	// 为什么要有 '/' 因为不然就 去了根目录找， 没进项目找， 找不到啊， 因为标识符在 项目里
-	#+END_SRC
-**** 首先要创建个类 继承 HttpServlet 类， 这个类可以处理 Http 信息
-**** 
-*** HttpServlet
-**** 
+
 
 * 问题
 
@@ -438,6 +611,7 @@
 
 *** 重定向第一次响应， 响应的是什么?
     - 新的地址 跟 响应码
+
 *** Web容器是什么?
     - 容器 一个对象存放另一个对象， 前者就是后者的容器
     - tomcat就是一个web容器
@@ -446,10 +620,20 @@
       - Servlet容器加载Servlet ， 生成 Servlet实例， 向 Servlet实例 传递 请求 响应 对象
       - Servlet 实例使用 请求对象 得到 浏览器(客户端) 的请求信息， 进行处理
       - Servlet 实例将处理结果 通过 响应对象， 返回给 客户端
+
 *** 为什么要有 Servlet
     - 因为实现 传输处理 监听接口 解析http ...交给 Tomcat ， 我们都是垃圾， 不懂这么复杂的数据控制，  Servlet是 接口， 为了规范， 我们就是根据他的规范来处理数据
 
+*** 写了doPost 方法， doGet没写 ， 能跑吗?
+    - 除非你是 Post访问， 不然 你跑个JB
 
 ** 未解决
 
 *** Dao 是什么?
+
+*** <a href="down?filename=file.txt">文本文件</a><br/>
+    - down 是 Servlet的 urlPatterns ， 那问号是什么鬼
+
+
+*** 盗链
+    - 什么叫盗链
